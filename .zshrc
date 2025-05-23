@@ -1,4 +1,3 @@
-neofetch
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -67,4 +66,30 @@ SAVEHIST=10000
 setopt SHARE_HISTORY
 export PATH=$PATH:/opt/sonar-scanner/bin
 
-export ANTHROPIC_API_KEY=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
+export PATH="$PATH:/usr/bin/fzf"
+
+# pnpm
+export PNPM_HOME="/home/rehem/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# shell wrap for yazi
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
+
+# alias for fzf
+alias fzf="fzf --preview 'bat --style=numbers --color=always {}' --bind 'enter:execute(nvim {})'"
+
+# alias for tmux
+alias ts="tmuxifier s" 
+alias ta="tmux a -t"
+alias lzd='lazydocker'
