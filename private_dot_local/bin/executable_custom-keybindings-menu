@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Custom keybindings menu with personalized descriptions
+
+cat <<'EOF' | walker --dmenu --theme keybindings -p 'Keybindings'
+SUPER + /                          → Abrir Menu de Keybinds
+SUPER + SPACE                      → Launcher (Walker)
+SUPER + BACKSPACE                  → Terminal
+SUPER + F                          → Gerenciador de arquivos
+SUPER + B                          → Navegador (Zen)
+SUPER + M                          → Spotify
+SUPER + N                          → Neovim
+SUPER + T                          → Monitor do sistema (btop)
+SUPER + D                          → Docker (lazydocker)
+SUPER + G                          → Signal
+SUPER + O                          → Obsidian
+SUPER + A                          → ChatGPT
+SUPER + C                          → Calendário
+SUPER + E                          → Email (Hey)
+SUPER + Y                          → YouTube
+SUPER + X                          → Twitter/X
+SUPER + ESC                        → Menu de energia
+SUPER + H/J/K/L                    → Navegar entre janelas
+SUPER + SHIFT + H/J/K/L            → Mover janelas
+SUPER + 1-9                        → Trocar workspace
+SUPER + SHIFT + 1-9                → Mover janela para workspace
+SUPER + Q                          → Fechar janela
+SUPER + SHIFT + Q                  → Forçar fechar janela
+SUPER + ENTER                      → Alternar fullscreen
+SUPER + V                          → Alternar floating
+SUPER + TAB                        → Alternar split
+SUPER + COMMA                      → Dispensar notificação
+SUPER + SHIFT + COMMA              → Dispensar todas notificações
+PRINT                              → Screenshot da área
+SHIFT + PRINT                      → Screenshot da janela
+CTRL + PRINT                       → Screenshot da tela
+ALT + PRINT                        → Gravar tela
+SUPER + PRINT                      → Color picker
+EOF
+
