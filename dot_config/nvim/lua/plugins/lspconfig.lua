@@ -4,7 +4,7 @@ return {
     -- Define o caminho do Node.js para todos os servidores LSP
     local node_path = "/home/rehem/.local/share/mise/installs/node/22.17.1/bin/node"
     vim.g.node_host_prog = node_path
-    
+
     -- Adiciona o diretório do Node.js ao PATH
     local env_path = vim.env.PATH
     if not string.find(env_path, "/home/rehem/.local/share/mise/installs/node/22.17.1/bin") then
@@ -12,8 +12,9 @@ return {
     end
   end,
   opts = {
+    eslint = {},
     servers = {
-      eslint = {},
+      tsserver = {},
       tailwindcss = {},
       marksman = {},
       dockerls = {},

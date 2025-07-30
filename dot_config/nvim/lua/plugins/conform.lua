@@ -9,6 +9,12 @@ return {
       ["mysql"] = { "sqlfluff" },
       ["plsql"] = { "sqlfluff" },
       ["postgres"] = { "sqlfluff" },
+      ["javascript"] = { "eslint_d", "prettier" },
+      ["javascriptreact"] = { "eslint_d", "prettier" },
+      ["typescript"] = { "eslint_d", "prettier" },
+      ["typescriptreact"] = { "eslint_d", "prettier" },
+      ["json"] = { "prettier" },
+      ["jsonc"] = { "prettier" },
       -- adicione outros filetypes de SQL se necessário
     },
     formatters = {
