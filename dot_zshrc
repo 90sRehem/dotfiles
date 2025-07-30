@@ -123,3 +123,24 @@ alias gcad='git commit -a --amend'
 
 # Find packages without leaving the terminal
 alias yayf="yay -Slq | fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% | xargs -ro yay -S"
+
+## Android
+export JAVA_HOME=/opt/android-studio/jbr
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+export ANDROID_AVD_HOME=/home/rehem/.config/.android/avd
+
+# Chezmoi Aliases
+alias ca="chezmoi add"
+alias ce="chezmoi edit"
+alias cu="chezmoi update"
+alias capply="chezmoi apply"
+alias cdiff="chezmoi diff"
+
+
+# Chezmoi edit and apply function
+cea() {
+    chezmoi edit --apply "$1"
+}
+
