@@ -1,0 +1,9 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "keybinds": {
+    "messages_previous": "ctrl+k",
+    "messages_next": "ctrl+j",
+    "input_newline": "ctrl+o",
+    "messages_copy": "ctrl+y"
+  }
+}
