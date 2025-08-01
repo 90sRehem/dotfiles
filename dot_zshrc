@@ -197,7 +197,7 @@ alias tmuxconf='nvim ~/.tmux.conf' # Edit tmux configuration
 
 # Tmuxifier Project Management
 alias tx='tmuxifier'              # Tmuxifier command
-alias txs='tmuxifier start'       # Start project session
+alias txs='tmuxifier s'       # Start project session
 alias txn='tmuxifier new'         # Create new project template
 alias txl='tmuxifier list'        # List available projects
 alias txe='tmuxifier edit'        # Edit project template
@@ -239,7 +239,7 @@ tcd() {
 alias n='nvim'      # Neovim editor
 alias g='git'       # Git version control
 alias d='docker'    # Docker containerization
-alias r='rails'     # Ruby on Rails
+alias y='yazi'      # Yazi file manager
 
 # ============================================================================
 # GIT ALIASES
@@ -288,9 +288,10 @@ cea() {
 # TMUXIFIER CONFIGURATION
 # ============================================================================
 
-# Tmuxifier setup (uncomment if you install tmuxifier)
-# export PATH="$HOME/.tmuxifier/bin:$PATH"
-# eval "$(tmuxifier init -)"
+# Tmuxifier setup
+export TMUXIFIER="$HOME/.tmux/plugins/tmuxifier"
+export PATH="$HOME/.tmux/plugins/tmuxifier/bin:$PATH"
+eval "$(tmuxifier init -)"
 
 # ============================================================================
 # CUSTOM FUNCTIONS
@@ -315,3 +316,11 @@ fi
 # ============================================================================
 # END OF CONFIGURATION
 # ============================================================================
+
+# pnpm
+export PNPM_HOME="/home/rehem/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
