@@ -1,0 +1,9 @@
+[Plymouth Theme]
+Name=Delta Corps
+Description=Delta Corps custom splash screen theme.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/delta-corps
+ScriptFile=/usr/share/plymouth/themes/delta-corps/delta-corps.script
+ConsoleLogBackgroundColor=0x000000
