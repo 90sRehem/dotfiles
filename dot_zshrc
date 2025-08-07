@@ -159,6 +159,15 @@ alias lta='lt -a'                                          # Tree view with hidd
 # File operations
 alias ff="fzf --preview 'bat --style=numbers --color=always {}'"  # Fuzzy find files with preview
 
+# Fuzzy find and open in nvim
+fv() {
+  local file
+  file=$(fzf --preview 'bat --style=numbers --color=always {}') && [ -n "$file" ] && nvim "$file"
+}
+
+# FZF configuration
+export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
+
 # Directory navigation
 alias ..='cd ..'        # Go up one directory
 alias ...='cd ../..'    # Go up two directories
@@ -187,7 +196,7 @@ open() {
 
 # Basic Tmux Operations
 alias t='tmux'                    # Start tmux
-alias ta='tmux attach'            # Attach to existing session
+alias ta='tmux a -t'            # Attach to existing session
 alias tad='tmux attach -d'        # Attach and detach others
 alias ts='tmux new-session'       # Create new session
 alias tl='tmux list-sessions'     # List all sessions
@@ -238,7 +247,9 @@ tcd() {
 # Quick access to common tools
 alias n='nvim'      # Neovim editor
 alias g='git'       # Git version control
+alias lzg='lazygit'  # Lazygit TUI
 alias d='docker'    # Docker containerization
+alias lzd='lazydocker' # Lazydocker TUI
 alias y='yazi'      # Yazi file manager
 
 # ============================================================================
@@ -284,6 +295,72 @@ cea() {
     chezmoi edit --apply "$1"
 }
 
+# Edit with watch mode (auto-apply on save)
+cew() {
+    chezmoi edit --watch "$1"
+}
+
+# Edit source file directly and apply
+ces() {
+    local file="$1"
+    local source_file=$(chezmoi source-path "$file")
+    if [[ -n "$source_file" ]]; then
+        nvim "$source_file" && chezmoi apply "$file"
+    else
+        echo "File not managed by chezmoi: $file"
+    fi
+}
+
+# Auto-sync edited files to chezmoi
+csync() {
+    local file="$1"
+    if [[ -z "$file" ]]; then
+        echo "Usage: csync <file>"
+        return 1
+    fi
+    
+    # Add file to chezmoi if not already managed
+    if ! chezmoi managed "$file" &>/dev/null; then
+        chezmoi add "$file"
+        echo "Added $file to chezmoi"
+    else
+        # Re-add to sync changes
+        chezmoi re-add "$file"
+        echo "Synced $file to chezmoi"
+    fi
+}
+
+# Watch and auto-sync common dotfiles
+cwatch() {
+    echo "Watching dotfiles for changes..."
+    echo "Press Ctrl+C to stop"
+    
+    # List of common dotfiles to watch
+    local files=(
+        "$HOME/.zshrc"
+        "$HOME/.bashrc" 
+        "$HOME/.vimrc"
+        "$HOME/.tmux.conf"
+        "$HOME/.gitconfig"
+    )
+    
+    # Use inotifywait if available
+    if command -v inotifywait &> /dev/null; then
+        for file in "${files[@]}"; do
+            if [[ -f "$file" ]]; then
+                inotifywait -m -e modify "$file" --format '%w' |
+                while read changed_file; do
+                    echo "Detected change in $changed_file"
+                    csync "$changed_file"
+                done &
+            fi
+        done
+        wait
+    else
+        echo "Install inotify-tools for file watching: sudo pacman -S inotify-tools"
+    fi
+}
+
 # ============================================================================
 # TMUXIFIER CONFIGURATION
 # ============================================================================
@@ -297,11 +374,68 @@ eval "$(tmuxifier init -)"
 # CUSTOM FUNCTIONS
 # ============================================================================
 
-# Add your custom functions here
-# Example:
-# myfunction() {
-#     echo "This is a custom function"
-# }
+# Show aliases with descriptions
+aliases() {
+  echo "📋 Aliases with descriptions:"
+  echo "=========================="
+  
+  # File System
+  echo "🗂️  FILE SYSTEM:"
+  echo "  ls     - Enhanced ls with eza (icons, details)"
+  echo "  lsa    - List all files including hidden"
+  echo "  lt     - Tree view with git status"
+  echo "  lta    - Tree view with hidden files"
+  echo "  ff     - Fuzzy find files with preview"
+  echo "  fv     - Fuzzy find and open in nvim"
+  echo "  ..     - Go up one directory"
+  echo "  ...    - Go up two directories"
+  echo "  ....   - Go up three directories"
+  echo "  cd     - Enhanced cd with zoxide"
+  echo ""
+  
+  # Development Tools
+  echo "🛠️  DEVELOPMENT:"
+  echo "  n      - Neovim editor"
+  echo "  g      - Git version control"
+  echo "  lzg    - Lazygit TUI"
+  echo "  d      - Docker"
+  echo "  lzd    - Lazydocker TUI"
+  echo "  y      - Yazi file manager"
+  echo ""
+  
+  # Git
+  echo "📦 GIT:"
+  echo "  gcm    - Git commit with message"
+  echo "  gcam   - Git add all and commit"
+  echo "  gcad   - Git amend last commit"
+  echo ""
+  
+  # Tmux
+  echo "🖥️  TMUX:"
+  echo "  t      - Start tmux"
+  echo "  ta     - Attach to session"
+  echo "  ts     - New session"
+  echo "  tl     - List sessions"
+  echo "  tx     - Tmuxifier"
+  echo ""
+  
+  # Package Management
+  echo "📦 PACKAGES:"
+  echo "  yayf   - Interactive package search/install"
+  echo ""
+  
+  # Dotfiles
+  echo "⚙️  DOTFILES:"
+  echo "  ca     - Chezmoi add"
+  echo "  ce     - Chezmoi edit"
+  echo "  cea    - Chezmoi edit and apply"
+  echo "  cew    - Chezmoi edit with watch (auto-apply)"
+  echo "  ces    - Edit source file and apply"
+  echo "  csync  - Sync edited file to chezmoi"
+  echo "  cwatch - Watch dotfiles and auto-sync"
+  echo "  cu     - Chezmoi update"
+  echo ""
+}
 
 # ============================================================================
 # LOCAL CUSTOMIZATIONS
@@ -324,3 +458,7 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# Task Master aliases added on 03/08/2025
+alias tm='task-master'
+alias taskmaster='task-master'

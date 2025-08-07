@@ -46,7 +46,7 @@ return {
             return {
               icon = " ",
               title = "Git Status",
-              action = ":!hub diff --stat -B -M -C",
+              action = ":!git diff --stat",
             }
           end
         end
@@ -72,7 +72,7 @@ return {
               icon = " ",
               title = "Git Status",
               enabled = vim.fn.isdirectory('.git') == 1,
-              cmd = "hub diff --stat -B -M -C",
+              cmd = "git diff --stat",
               height = 8,
               padding = 2,
               indent = 0
