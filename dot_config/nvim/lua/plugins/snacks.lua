@@ -32,7 +32,7 @@ return {
           local items = {}
           for _, project in ipairs(projects) do
             table.insert(items, {
-              icon = " ",
+              icon = " ",
               desc = project,
               action = ":cd " .. project .. " | :Telescope find_files",
             })
@@ -40,79 +40,45 @@ return {
           return items
         end
 
-        -- Verificação de diretório Git
-        local function git_status()
-          if vim.fn.isdirectory(".git") == 1 then
-            return {
-              icon = " ",
-              title = "Git Status",
-              action = ":!git diff --stat",
-            }
-          end
+        -- Função para verificar se está em um repositório git
+        local function is_git_repo()
+          local success, _ = pcall(vim.fn.system, "git rev-parse --git-dir 2>/dev/null")
+          return success and vim.v.shell_error == 0
         end
 
-          -- stylua: ignore
-          return {
-            { padding = 0, align = "center", text = { header, hl = "header" } },
-            { padding = 2, align = "center", text = { greeting(), hl = "header" } },
-            { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
-            { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
-            { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
-            { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
-            { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
-            { icon = " ", key = "s", desc = "Restore Session", section = "session" },
-            { icon = " ", key = "x", desc = "Lazy Extras", action = ":LazyExtras" },
-            { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
-            { icon = " ", key = "q", desc = "Quit", action = ":qa" },
-            { padding = 1 },
-            { section = "recent_files", icon = " ", title = "Recent Files", indent = 3, padding = 2 },
-            { section = "projects", icon = " ", title = "Projects", indent = 3, padding = 2 },
-            {
-              section = "terminal",
-              icon = " ",
-              title = "Git Status",
-              enabled = vim.fn.isdirectory('.git') == 1,
-              cmd = "git diff --stat",
-              height = 8,
-              padding = 2,
-              indent = 0
-            },
-            { section = "startup" },
-          }
+        return {
+          { padding = 0, align = "center", text = { header, hl = "header" } },
+          { padding = 2, align = "center", text = { greeting(), hl = "header" } },
+          { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
+          { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
+          { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
+          { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
+          {
+            icon = " ",
+            key = "c",
+            desc = "Config",
+            action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})",
+          },
+          { icon = " ", key = "s", desc = "Restore Session", section = "session" },
+          { icon = " ", key = "x", desc = "Lazy Extras", action = ":LazyExtras" },
+          { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
+          { icon = " ", key = "q", desc = "Quit", action = ":qa" },
+          { padding = 1 },
+          { section = "recent_files", icon = " ", title = "Recent Files", indent = 3, padding = 2 },
+          { section = "projects", icon = " ", title = "Projects", indent = 3, padding = 2 },
+          {
+            section = "terminal",
+            icon = " ",
+            title = "Git Status",
+            enabled = vim.fn.isdirectory(".git") == 1,
+            cmd = "hub diff --stat -B -M -C",
+            height = 8,
+            padding = 2,
+            indent = 0,
+          },
+          { section = "startup" },
+        }
       end,
     },
   },
 }
--- return {
---   "snacks.nvim",
---   opts = {
---     dashboard = {
---       preset = {
---         pick = function(cmd, opts)
---           return LazyVim.pick(cmd, opts)()
---         end,
---         header = [[
--- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗███╗   ███╗
--- ████╗  ██║██╔════╝██╔═══██╗██║   ██║██║████╗ ████║
--- ██╔██╗ ██║█████╗  ██║   ██║██║   ██║██║██╔████╔██║
--- ██║╚██╗██║██╔══╝  ██║   ██║╚██╗ ██╔╝██║██║╚██╔╝██║
--- ██║ ╚████║███████╗╚██████╔╝ ╚████╔╝ ██║██║ ╚═╝ ██║
--- ╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═══╝  ╚═╝╚═╝     ╚═╝]],
---         -- stylua: ignore
---         ---@type snacks.dashboard.Item[]
---         keys = {
---           { icon = " ", key = "f", desc = "Find File", action = ":lua Snacks.dashboard.pick('files')" },
---           { icon = " ", key = "n", desc = "New File", action = ":ene | startinsert" },
---           { icon = " ", key = "g", desc = "Find Text", action = ":lua Snacks.dashboard.pick('live_grep')" },
---           { icon = " ", key = "r", desc = "Recent Files", action = ":lua Snacks.dashboard.pick('oldfiles')" },
---           { icon = " ", key = "c", desc = "Config", action = ":lua Snacks.dashboard.pick('files', {cwd = vim.fn.stdpath('config')})" },
---           { icon = " ", key = "s", desc = "Restore Session", section = "session" },
---           { icon = " ", key = "x", desc = "Lazy Extras", action = ":LazyExtras" },
---           { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },
---           { icon = " ", key = "q", desc = "Quit", action = ":qa" },
---         },
---       },
---     },
---   },
--- }
---

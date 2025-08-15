@@ -12,7 +12,6 @@ return {
     end
   end,
   opts = {
-    eslint = {},
     servers = {
       tsserver = {},
       tailwindcss = {},

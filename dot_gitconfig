@@ -6,7 +6,10 @@
 [pull]
 	rebase = true
 [init]
-	defaultBranch = master
+	defaultBranch = main
 [user]
 	name = Jonathan Rehem
 	email = jonathan.rehem@outlook.com
+
+[includeIf "gitdir:~/Documentos/dev/work/hyperlocal/"]
+  path = ~/Documentos/dev/work/hyperlocal/.gitconfig-hyperlocal
