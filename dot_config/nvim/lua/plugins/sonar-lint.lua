@@ -1,5 +1,6 @@
 return {
-  "schrieveslaach/sonarlint.nvim",
+  "https://gitlab.com/schrieveslaach/sonarlint.nvim.git",
+  name = "sonarlint.nvim",
   dependencies = {
     "williamboman/mason.nvim",
     "neovim/nvim-lspconfig",

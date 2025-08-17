@@ -1,5 +1,6 @@
 return {
   "azorng/goose.nvim",
+  enabled = false,
   config = function()
     require("goose").setup({
       default_global_keymaps = false,
