@@ -1,19 +1,15 @@
 return {
   "stevearc/conform.nvim",
   opts = {
-    format_on_save = {
-      timeout_ms = 500,
-      lsp_fallback = true,
-    },
     formatters_by_ft = {
       ["lua"] = { "stylua" },
       ["yaml"] = { "yamlfix" },
       ["markdown"] = { "prettier", "markdownlint-cli2", "markdown-toc" },
       ["markdown.mdx"] = { "prettier", "markdownlint-cli2", "markdown-toc" },
-      ["sql"] = { "sqlfluff" },
-      ["mysql"] = { "sqlfluff" },
-      ["plsql"] = { "sqlfluff" },
-      ["postgres"] = { "sqlfluff" },
+      ["sql"] = { "sql_formatter" },
+      ["mysql"] = { "sql_formatter" },
+      ["plsql"] = { "sql_formatter" },
+      ["postgres"] = { "sql_formatter" },
       ["javascript"] = { "eslint_d", "prettier" },
       ["javascriptreact"] = { "eslint_d", "prettier" },
       ["typescript"] = { "eslint_d", "prettier" },
@@ -40,8 +36,8 @@ return {
           return #diag > 0
         end,
       },
-      ["sqlfluff"] = {
-        args = { "format", "--dialect=ansi", "-" }, -- altere o dialect conforme seu banco (ansi, postgres, etc)
+      ["sql_formatter"] = {
+        args = { "-c", "/home/rehem/.config/nvim/.sql-formatter.json" },
       },
     },
   },
