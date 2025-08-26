@@ -28,8 +28,8 @@ setopt autocd           # Automatically cd into directories by typing their name
 setopt beep            # Enable beep on errors
 setopt notify          # Report status of background jobs immediately
 
-# Key bindings (emacs-style)
-bindkey -e
+# Key bindings (vim style)
+bindkey -v           # Use vi key bindings
 
 # ============================================================================
 # COMPLETION SYSTEM
