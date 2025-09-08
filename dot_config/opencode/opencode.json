@@ -1,9 +1,27 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "keybinds": {
-    "messages_previous": "ctrl+k",
-    "messages_next": "ctrl+j",
-    "input_newline": "ctrl+o",
-    "messages_copy": "ctrl+y"
+    "messages_page_up": "<leader>k",
+    "messages_page_down": "<leader>j",
+    "messages_copy": "<leader>y"
+  },
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11435/v1"
+      },
+      "models": {
+        "qwen2.5-coder:7b": {
+          "name": "qwen2.5-coder:7b",
+          "reasoning": true,
+          "tool_call": true
+        },
+        "llama3.1:8b": {
+          "name": "llama3.1:8b"
+        }
+      }
+    }
   }
 }
