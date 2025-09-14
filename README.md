@@ -8,20 +8,37 @@ Sistema completo de dotfiles e migração para Arch Linux gerenciado com [chezmo
 ```bash
 # Arch Linux - instalar dependências mínimas
 sudo pacman -S git base-devel chezmoi
+```
 
-# Para usar SSH (recomendado):
-# Configure sua chave SSH no GitHub primeiro
+### Autenticação (Escolha uma opção):
 
-# Para usar GitHub CLI:
+#### SSH (Recomendado)
+```bash
+# 1. Gerar chave SSH se não tiver
+ssh-keygen -t ed25519 -C "seu-email@exemplo.com"
+
+# 2. Adicionar ao ssh-agent
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+# 3. Copiar chave pública e adicionar no GitHub
+cat ~/.ssh/id_ed25519.pub
+# Cole a chave em: GitHub → Settings → SSH and GPG keys
+```
+
+#### GitHub CLI (Alternativa)
+```bash
+# Instalar e autenticar
 sudo pacman -S github-cli
 gh auth login
+# Seguir instruções interativas
 ```
 
 ### Aplicar Configurações
 
-#### Opção A: SSH (Recomendado se você tem chave SSH configurada)
+#### Opção A: SSH (Recomendado)
 ```bash
-# Clonar via SSH e aplicar configurações da branch arch
+# Clonar via SSH - requer chave SSH configurada no GitHub
 chezmoi init --apply git@github.com:90sRehem/dotfiles.git --branch arch
 
 # Os scripts de migração já estarão disponíveis
@@ -31,7 +48,11 @@ cd ~
 
 #### Opção B: GitHub CLI
 ```bash
-# Instalar gh se necessário: sudo pacman -S github-cli
+# Instalar e autenticar GitHub CLI
+sudo pacman -S github-cli
+gh auth login
+
+# Clonar e aplicar
 gh repo clone 90sRehem/dotfiles ~/.local/share/chezmoi --branch arch
 chezmoi apply
 
@@ -39,9 +60,10 @@ chezmoi apply
 ./install_from_backup.sh
 ```
 
-#### Opção C: HTTPS (público)
+#### Opção C: HTTPS (somente leitura)
 ```bash
-# Clonar via HTTPS (não requer autenticação)
+# ⚠️  HTTPS funciona apenas para repositórios PÚBLICOS
+# Não permite push/commits - apenas clone e pull
 chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
 
 # Executar migração
@@ -89,8 +111,9 @@ chezmoi apply
 ./install_from_backup.sh
 ```
 
-#### Opção C: HTTPS
+#### Opção C: HTTPS (somente repositórios públicos)
 ```bash
+# ⚠️  Sem capacidade de push - apenas para clone inicial
 chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
 ./install_from_backup.sh
 ```
@@ -183,13 +206,13 @@ dotfiles_migration_YYYYMMDD_HHMMSS/
 
 ### Instalação Nova Máquina:
 ```bash
-# SSH (recomendado)
+# SSH (recomendado - permite push/pull)
 chezmoi init --apply git@github.com:90sRehem/dotfiles.git --branch arch
 
-# GitHub CLI
+# GitHub CLI (alternativa com autenticação)
 gh repo clone 90sRehem/dotfiles ~/.local/share/chezmoi --branch arch && chezmoi apply
 
-# HTTPS (público)
+# HTTPS (somente leitura - sem push)
 chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
 ```
 
