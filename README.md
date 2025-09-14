@@ -8,16 +8,44 @@ Sistema completo de dotfiles e migração para Arch Linux gerenciado com [chezmo
 ```bash
 # Arch Linux - instalar dependências mínimas
 sudo pacman -S git base-devel chezmoi
+
+# Para usar SSH (recomendado):
+# Configure sua chave SSH no GitHub primeiro
+
+# Para usar GitHub CLI:
+sudo pacman -S github-cli
+gh auth login
 ```
 
 ### Aplicar Configurações
+
+#### Opção A: SSH (Recomendado se você tem chave SSH configurada)
 ```bash
-# Clonar e aplicar configurações da branch arch
-chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
+# Clonar via SSH e aplicar configurações da branch arch
+chezmoi init --apply git@github.com:90sRehem/dotfiles.git --branch arch
 
 # Os scripts de migração já estarão disponíveis
 cd ~
-./migrate.sh
+./install_from_backup.sh
+```
+
+#### Opção B: GitHub CLI
+```bash
+# Instalar gh se necessário: sudo pacman -S github-cli
+gh repo clone 90sRehem/dotfiles ~/.local/share/chezmoi --branch arch
+chezmoi apply
+
+# Executar migração
+./install_from_backup.sh
+```
+
+#### Opção C: HTTPS (público)
+```bash
+# Clonar via HTTPS (não requer autenticação)
+chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
+
+# Executar migração
+./install_from_backup.sh
 ```
 
 ## 📦 Sistema de Migração Incluído
@@ -48,10 +76,23 @@ Este repositório inclui um **sistema completo de migração multi-distribuiçã
 
 ### 2. Na Nova Máquina
 
-#### Opção A: Com Chezmoi (Recomendado)
+#### Opção A: SSH (Recomendado)
+```bash
+chezmoi init --apply git@github.com:90sRehem/dotfiles.git --branch arch
+./install_from_backup.sh
+```
+
+#### Opção B: GitHub CLI
+```bash
+gh repo clone 90sRehem/dotfiles ~/.local/share/chezmoi --branch arch
+chezmoi apply
+./install_from_backup.sh
+```
+
+#### Opção C: HTTPS
 ```bash
 chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
-./migrate.sh
+./install_from_backup.sh
 ```
 
 #### Opção B: Manual
@@ -140,17 +181,33 @@ dotfiles_migration_YYYYMMDD_HHMMSS/
 
 ## ⚡ Comandos Rápidos
 
+### Instalação Nova Máquina:
 ```bash
-# Menu principal
+# SSH (recomendado)
+chezmoi init --apply git@github.com:90sRehem/dotfiles.git --branch arch
+
+# GitHub CLI
+gh repo clone 90sRehem/dotfiles ~/.local/share/chezmoi --branch arch && chezmoi apply
+
+# HTTPS (público)
+chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
+```
+
+### Scripts de Migração:
+```bash
+# Instalar pacotes (nova máquina)
+./install_from_backup.sh
+
+# Menu completo (máquina atual)
 ./migrate.sh
 
-# Backup apenas
+# Backup apenas (máquina atual)
 ./dotfiles_sync.sh
+```
 
-# Instalação apenas
-./migration_installer.sh
-
-# Ver status chezmoi
+### Chezmoi:
+```bash
+# Ver status
 chezmoi status
 
 # Aplicar mudanças
@@ -158,6 +215,9 @@ chezmoi apply
 
 # Editar arquivo
 chezmoi edit ~/.bashrc
+
+# Atualizar do repositório
+chezmoi update
 ```
 
 ## 🔧 Personalização
