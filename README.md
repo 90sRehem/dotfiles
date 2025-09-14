@@ -12,8 +12,8 @@ sudo pacman -S git base-devel chezmoi
 
 ### Aplicar Configurações
 ```bash
-# Substituir pela URL do seu repositório
-chezmoi init --apply https://github.com/SEU_USUARIO/dotfiles
+# Clonar e aplicar configurações da branch arch
+chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
 
 # Os scripts de migração já estarão disponíveis
 cd ~
@@ -50,7 +50,7 @@ Este repositório inclui um **sistema completo de migração multi-distribuiçã
 
 #### Opção A: Com Chezmoi (Recomendado)
 ```bash
-chezmoi init --apply SEU_REPO
+chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
 ./migrate.sh
 ```
 
