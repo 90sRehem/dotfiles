@@ -1,0 +1,9 @@
+android-studio
+bundletool
+chaotic-keyring
+chaotic-mirrorlist
+lazysql
+localsend
+slack-desktop
+vicinae-bin
+zen-browser-bin
