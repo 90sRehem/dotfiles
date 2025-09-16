@@ -16,17 +16,29 @@ import re
 
 def extract_color(content, color_name, section='primary'):
     if section == 'primary':
-        pattern = f'^{color_name}\\\\s*=\\\\s*[\'\"](.*?)[\'\"]\$'
+        pattern = f'{color_name}\\\\s*=\\\\s*[\'\"](.*?)[\'\"]\$'
         match = re.search(pattern, content, re.MULTILINE)
         if match:
-            return match.group(1)
+            color = match.group(1)
+            # Converter 0x para # se necessário
+            if color.startswith('0x'):
+                color = '#' + color[2:]
+            elif not color.startswith('#'):
+                color = '#' + color
+            return color
     elif section == 'normal':
         normal_match = re.search(r'\\[colors\\.normal\\](.*?)(?=\\[|\\Z)', content, re.DOTALL)
         if normal_match:
-            pattern = f'^{color_name}\\\\s*=\\\\s*[\'\"](.*?)[\'\"]\$'
+            pattern = f'{color_name}\\\\s*=\\\\s*[\'\"](.*?)[\'\"]\$'
             match = re.search(pattern, normal_match.group(1), re.MULTILINE)
             if match:
-                return match.group(1)
+                color = match.group(1)
+                # Converter 0x para # se necessário
+                if color.startswith('0x'):
+                    color = '#' + color[2:]
+                elif not color.startswith('#'):
+                    color = '#' + color
+                return color
     return '#000000'
 
 try:
@@ -91,27 +103,32 @@ set -g @theme_magenta '$TMUX_MAGENTA'
 set -g @theme_cyan '$TMUX_CYAN'
 set -g @theme_white '$TMUX_WHITE'
 
-# Aplicar cores aos elementos do tmux
+# Status bar geral
 set -g status-style "bg=$TMUX_BG,fg=$TMUX_FG"
 set -g status-left-style "bg=$TMUX_BLUE,fg=$TMUX_BG,bold"
 set -g status-right-style "bg=$TMUX_BG,fg=$TMUX_FG"
 
-# Janela ativa
+# Configuração das janelas
 set -g window-status-current-style "bg=$TMUX_MAGENTA,fg=$TMUX_BG,bold"
+set -g window-status-style "bg=$TMUX_BLACK,fg=$TMUX_WHITE"
+set -g window-status-activity-style "bg=$TMUX_YELLOW,fg=$TMUX_BG"
+set -g window-status-bell-style "bg=$TMUX_RED,fg=$TMUX_BG"
 
-# Janela inativa  
-set -g window-status-style "bg=$TMUX_BLACK,fg=$TMUX_FG"
-
-# Bordas dos painéis
-set -g pane-active-border-style "fg=$TMUX_MAGENTA,bg=default"
+# Bordas dos painéis - cores mais suaves
+set -g pane-active-border-style "fg=$TMUX_BLUE,bg=default"
 set -g pane-border-style "fg=$TMUX_BLACK,bg=default"
 
-# Copy mode
+# Configuração de copy mode  
 set -g mode-style "fg=$TMUX_BG,bg=$TMUX_YELLOW,bold"
 
-# Mensagens
-set -g message-style "bg=$TMUX_YELLOW,fg=$TMUX_BG,bold"
-set -g message-command-style "bg=$TMUX_RED,fg=$TMUX_BG,bold"
+# Mensagens e comandos
+set -g message-style "bg=$TMUX_GREEN,fg=$TMUX_BG,bold"
+set -g message-command-style "bg=$TMUX_CYAN,fg=$TMUX_BG,bold"
+
+# Indicadores de atividade
+set -g window-status-activity-style "underscore"
+set -g monitor-activity on
+set -g visual-activity off
 EOF
 
     echo "Tema tmux aplicado: $theme_name"
