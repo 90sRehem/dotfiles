@@ -1,0 +1,193 @@
+#!/bin/bash
+# Script para sincronizar tema do tmux com o Omarchy
+
+# Função para extrair cores do tema Alacritty
+extract_colors_from_alacritty() {
+    local alacritty_file="$1"
+    
+    if [[ ! -f "$alacritty_file" ]]; then
+        echo "Arquivo Alacritty não encontrado: $alacritty_file"
+        return 1
+    fi
+    
+    # Usar Python para extração precisa
+    python3 -c "
+import re
+
+def extract_color(content, color_name, section='primary'):
+    if section == 'primary':
+        pattern = f'^{color_name}\\\\s*=\\\\s*[\'\"](.*?)[\'\"]\$'
+        match = re.search(pattern, content, re.MULTILINE)
+        if match:
+            return match.group(1)
+    elif section == 'normal':
+        normal_match = re.search(r'\\[colors\\.normal\\](.*?)(?=\\[|\\Z)', content, re.DOTALL)
+        if normal_match:
+            pattern = f'^{color_name}\\\\s*=\\\\s*[\'\"](.*?)[\'\"]\$'
+            match = re.search(pattern, normal_match.group(1), re.MULTILINE)
+            if match:
+                return match.group(1)
+    return '#000000'
+
+try:
+    with open('$alacritty_file', 'r') as f:
+        content = f.read()
+    
+    # Extrair cores principais
+    bg = extract_color(content, 'background', 'primary')
+    fg = extract_color(content, 'foreground', 'primary')
+    
+    # Cores normais
+    black = extract_color(content, 'black', 'normal')
+    red = extract_color(content, 'red', 'normal')
+    green = extract_color(content, 'green', 'normal')
+    yellow = extract_color(content, 'yellow', 'normal')
+    blue = extract_color(content, 'blue', 'normal')
+    magenta = extract_color(content, 'magenta', 'normal')
+    cyan = extract_color(content, 'cyan', 'normal')
+    white = extract_color(content, 'white', 'normal')
+    
+    # Exportar como variáveis de ambiente
+    print(f'export TMUX_BG=\"{bg}\"')
+    print(f'export TMUX_FG=\"{fg}\"')
+    print(f'export TMUX_BLACK=\"{black}\"')
+    print(f'export TMUX_RED=\"{red}\"')
+    print(f'export TMUX_GREEN=\"{green}\"')
+    print(f'export TMUX_YELLOW=\"{yellow}\"')
+    print(f'export TMUX_BLUE=\"{blue}\"')
+    print(f'export TMUX_MAGENTA=\"{magenta}\"')
+    print(f'export TMUX_CYAN=\"{cyan}\"')
+    print(f'export TMUX_WHITE=\"{white}\"')
+    
+except Exception as e:
+    print(f'# Erro na extração: {e}', file=sys.stderr)
+    exit(1)
+"
+}
+
+# Função para aplicar tema no tmux
+apply_tmux_theme() {
+    local theme_name="$1"
+    local tmux_config="$HOME/.config/tmux"
+    local tmux_theme_file="$tmux_config/current-theme.conf"
+    
+    # Criar diretório se não existir
+    mkdir -p "$tmux_config"
+    
+    # Gerar arquivo de tema
+    cat > "$tmux_theme_file" << EOF
+# Auto-gerado a partir do tema Omarchy: $theme_name
+# $(date)
+
+# Cores do tema $theme_name
+set -g @theme_bg '$TMUX_BG'
+set -g @theme_fg '$TMUX_FG'
+set -g @theme_black '$TMUX_BLACK'
+set -g @theme_red '$TMUX_RED'
+set -g @theme_green '$TMUX_GREEN'
+set -g @theme_yellow '$TMUX_YELLOW'
+set -g @theme_blue '$TMUX_BLUE'
+set -g @theme_magenta '$TMUX_MAGENTA'
+set -g @theme_cyan '$TMUX_CYAN'
+set -g @theme_white '$TMUX_WHITE'
+
+# Aplicar cores aos elementos do tmux
+set -g status-style "bg=$TMUX_BG,fg=$TMUX_FG"
+set -g status-left-style "bg=$TMUX_BLUE,fg=$TMUX_BG,bold"
+set -g status-right-style "bg=$TMUX_BG,fg=$TMUX_FG"
+
+# Janela ativa
+set -g window-status-current-style "bg=$TMUX_MAGENTA,fg=$TMUX_BG,bold"
+
+# Janela inativa  
+set -g window-status-style "bg=$TMUX_BLACK,fg=$TMUX_FG"
+
+# Bordas dos painéis
+set -g pane-active-border-style "fg=$TMUX_MAGENTA,bg=default"
+set -g pane-border-style "fg=$TMUX_BLACK,bg=default"
+
+# Copy mode
+set -g mode-style "fg=$TMUX_BG,bg=$TMUX_YELLOW,bold"
+
+# Mensagens
+set -g message-style "bg=$TMUX_YELLOW,fg=$TMUX_BG,bold"
+set -g message-command-style "bg=$TMUX_RED,fg=$TMUX_BG,bold"
+EOF
+
+    echo "Tema tmux aplicado: $theme_name"
+}
+
+# Função para recarregar tmux
+reload_tmux() {
+    if tmux list-sessions &>/dev/null; then
+        # Recarregar configuração em todas as sessões
+        tmux source-file ~/.tmux.conf
+        tmux source-file ~/.config/tmux/current-theme.conf 2>/dev/null || true
+        echo "Tmux recarregado com novo tema"
+    fi
+}
+
+# Obter tema atual do Omarchy
+CURRENT_THEME=$(omarchy-theme-current)
+echo "Tema atual do Omarchy: $CURRENT_THEME"
+
+# Mapear nome do tema para arquivo
+case "$CURRENT_THEME" in
+    "Catppuccin")
+        THEME_DIR="catppuccin"
+        ;;
+    "Catppuccin Latte")
+        THEME_DIR="catppuccin-latte"
+        ;;
+    "Everforest")
+        THEME_DIR="everforest"
+        ;;
+    "Gruvbox")
+        THEME_DIR="gruvbox"
+        ;;
+    "Kanagawa")
+        THEME_DIR="kanagawa"
+        ;;
+    "Matte Black")
+        THEME_DIR="matte-black"
+        ;;
+    "Nord")
+        THEME_DIR="nord"
+        ;;
+    "Osaka Jade")
+        THEME_DIR="osaka-jade"
+        ;;
+    "Ristretto")
+        THEME_DIR="ristretto"
+        ;;
+    "Rose Pine")
+        THEME_DIR="rose-pine"
+        ;;
+    "Tokyo Night")
+        THEME_DIR="tokyo-night"
+        ;;
+    *)
+        echo "Tema não reconhecido: $CURRENT_THEME"
+        exit 1
+        ;;
+esac
+
+# Caminhos dos arquivos
+ALACRITTY_THEME="$HOME/.config/omarchy/themes/$THEME_DIR/alacritty.toml"
+
+# Extrair cores e aplicar tema
+if [[ -f "$ALACRITTY_THEME" ]]; then
+    echo "Extraindo cores do tema $CURRENT_THEME..."
+    
+    # Extrair cores como variáveis de ambiente
+    eval "$(extract_colors_from_alacritty "$ALACRITTY_THEME")"
+    
+    # Aplicar tema
+    apply_tmux_theme "$CURRENT_THEME"
+    
+    # Recarregar tmux
+    reload_tmux
+else
+    echo "Arquivo de tema não encontrado: $ALACRITTY_THEME"
+    exit 1
+fi

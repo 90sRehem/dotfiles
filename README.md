@@ -136,20 +136,21 @@ sudo dnf install $(cat pacman_explicit.txt | tr '\n' ' ')
 ./restore.sh
 ```
 
-## 🎨 Sincronização de Tema Kitty com Omarchy
+## 🎨 Sincronização de Temas com Omarchy
 
-Este sistema automaticamente sincroniza o tema do terminal **Kitty** com o tema selecionado no **Omarchy**.
+Este sistema automaticamente sincroniza os temas do **Kitty** e **tmux** com o tema selecionado no **Omarchy**.
 
 ### ✨ Recursos
 - **Sincronização Automática**: Detecta mudanças de tema do Omarchy em tempo real
-- **Conversão Inteligente**: Converte temas do Alacritty (TOML) para formato Kitty
-- **Suporte Completo**: Funciona com todos os 11 temas disponíveis no Omarchy
-- **Serviço Systemd**: Inicia automaticamente com o sistema
+- **Suporte Completo**: Kitty + tmux sincronizados simultaneamente
+- **Conversão Inteligente**: Converte temas do Alacritty (TOML) para formatos específicos
+- **Funciona com todos os 11 temas** disponíveis no Omarchy
+- **Serviços Systemd**: Iniciam automaticamente com o sistema
 
 ### 🔧 Como Funciona
-1. **Monitor**: Serviço `kitty-theme-watcher` monitora mudanças no tema atual do Omarchy
-2. **Conversão**: Script `alacritty-to-kitty` converte paleta de cores automaticamente  
-3. **Aplicação**: Tema é aplicado no Kitty e terminal é recarregado
+1. **Monitor**: Serviços monitoram mudanças no tema atual do Omarchy
+2. **Conversão**: Scripts extraem paletas de cores automaticamente  
+3. **Aplicação**: Temas são aplicados e programas recarregados
 4. **Tempo Real**: Mudanças são detectadas em ~2 segundos
 
 ### 🎯 Comandos Úteis
@@ -159,27 +160,38 @@ omarchy-theme-set "Tokyo Night"
 omarchy-theme-set "Catppuccin"
 omarchy-theme-set "Gruvbox"
 
-# Verificar status do serviço
+# Verificar status dos serviços
 systemctl --user status kitty-theme-watcher.service
+systemctl --user status tmux-theme-watcher.service
 
 # Sincronização manual
 kitty-theme-sync
+tmux-theme-sync
 
 # Ver tema atual
 omarchy-theme-current
 ```
 
 ### 📂 Arquivos Incluídos
+
+#### 🖥️ **Kitty**
 - `~/.local/bin/kitty-theme-sync` - Script principal de sincronização
 - `~/.local/bin/kitty-theme-watcher` - Monitor contínuo de mudanças
 - `~/.local/bin/alacritty-to-kitty` - Conversor Python (TOML → Kitty)
 - `~/.config/systemd/user/kitty-theme-watcher.service` - Serviço systemd
 
+#### 🖼️ **tmux**
+- `~/.local/bin/tmux-theme-sync` - Script principal de sincronização
+- `~/.local/bin/tmux-theme-watcher` - Monitor contínuo de mudanças
+- `~/.config/systemd/user/tmux-theme-watcher.service` - Serviço systemd
+- `~/.tmux.conf` - Configuração atualizada com carregamento automático de tema
+
 ### 🛠️ Instalação Automática
-O script `setup-kitty-theme-sync.sh` configura tudo automaticamente:
-- Cria diretório de temas
-- Habilita e inicia o serviço systemd
-- Executa sincronização inicial
+Os scripts `setup-*-theme-sync.sh` configuram tudo automaticamente:
+- Criam diretórios necessários
+- Habilitam e iniciam os serviços systemd
+- Executam sincronização inicial
+- Recarregam configurações
 
 ## 📋 Pacotes Atuais (Exemplo)
 

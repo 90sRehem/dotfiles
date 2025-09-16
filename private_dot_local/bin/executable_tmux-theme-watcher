@@ -1,0 +1,28 @@
+#!/bin/bash
+# Watcher contínuo para mudanças de tema do Omarchy (tmux)
+
+echo "Iniciando monitoramento de tema do Omarchy para tmux..."
+
+# Aplicar tema inicial
+~/.local/bin/tmux-theme-sync
+
+# Função para monitorar mudanças no symlink
+monitor_tmux_theme_changes() {
+    local current_theme=""
+    
+    while true; do
+        local new_theme=$(omarchy-theme-current 2>/dev/null || echo "")
+        
+        if [[ "$new_theme" != "$current_theme" && -n "$new_theme" ]]; then
+            echo "Mudança de tema detectada para tmux: $current_theme -> $new_theme"
+            current_theme="$new_theme"
+            sleep 0.5  # Pequeno delay para estabilizar
+            ~/.local/bin/tmux-theme-sync
+        fi
+        
+        sleep 2  # Verificar a cada 2 segundos
+    done
+}
+
+# Iniciar monitoramento
+monitor_tmux_theme_changes
