@@ -5,19 +5,33 @@ import sys
 def extract_color(content, color_name, section='primary'):
     """Extrai cor do arquivo TOML do Alacritty"""
     if section == 'primary':
-        pattern = f'^{color_name}\\s*=\\s*[\'"]([^\'"]*)[\'"]'
+        # Padrão mais flexível para capturar cores
+        pattern = f'{color_name}\\s*=\\s*[\'"]([^\'\"]*)[\'"]'
         match = re.search(pattern, content, re.MULTILINE)
         if match:
-            return match.group(1)
+            color = match.group(1)
+            # Converter 0x para # se necessário
+            if color.startswith('0x'):
+                color = '#' + color[2:]
+            elif not color.startswith('#'):
+                color = '#' + color
+            return color
     
     elif section == 'normal':
         # Encontrar seção [colors.normal]
         normal_match = re.search(r'\[colors\.normal\](.*?)(?=\[|\Z)', content, re.DOTALL)
         if normal_match:
-            pattern = f'^{color_name}\\s*=\\s*[\'"]([^\'"]*)[\'"]'
+            # Padrão mais flexível para capturar cores
+            pattern = f'{color_name}\\s*=\\s*[\'"]([^\'\"]*)[\'"]'
             match = re.search(pattern, normal_match.group(1), re.MULTILINE)
             if match:
-                return match.group(1)
+                color = match.group(1)
+                # Converter 0x para # se necessário
+                if color.startswith('0x'):
+                    color = '#' + color[2:]
+                elif not color.startswith('#'):
+                    color = '#' + color
+                return color
     
     return '#000000'  # fallback
 
