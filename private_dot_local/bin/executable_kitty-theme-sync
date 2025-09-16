@@ -1,0 +1,96 @@
+#!/bin/bash
+# Script para sincronizar tema do Kitty com o Omarchy
+
+# Função para converter tema do Alacritty para Kitty
+convert_alacritty_to_kitty() {
+    local alacritty_file="$1"
+    local kitty_file="$2"
+    
+    if [[ ! -f "$alacritty_file" ]]; then
+        echo "Arquivo Alacritty não encontrado: $alacritty_file"
+        return 1
+    fi
+    
+    # Usar script Python separado para conversão
+    ~/.local/bin/alacritty-to-kitty "$alacritty_file" "$kitty_file"
+}
+
+# Função para aplicar tema no Kitty
+apply_kitty_theme() {
+    local theme_file="$1"
+    local kitty_config="$HOME/.config/kitty"
+    
+    if [[ -f "$theme_file" ]]; then
+        cp "$theme_file" "$kitty_config/current-theme.conf"
+        echo "Tema aplicado: $(basename "$theme_file")"
+        
+        # Recarregar Kitty se estiver rodando
+        if pgrep -x kitty > /dev/null; then
+            killall -SIGUSR1 kitty 2>/dev/null || true
+        fi
+    else
+        echo "Arquivo de tema não encontrado: $theme_file"
+    fi
+}
+
+# Obter tema atual do Omarchy
+CURRENT_THEME=$(omarchy-theme-current)
+echo "Tema atual do Omarchy: $CURRENT_THEME"
+
+# Mapear nome do tema para arquivo
+case "$CURRENT_THEME" in
+    "Catppuccin")
+        THEME_DIR="catppuccin"
+        ;;
+    "Catppuccin Latte")
+        THEME_DIR="catppuccin-latte"
+        ;;
+    "Everforest")
+        THEME_DIR="everforest"
+        ;;
+    "Gruvbox")
+        THEME_DIR="gruvbox"
+        ;;
+    "Kanagawa")
+        THEME_DIR="kanagawa"
+        ;;
+    "Matte Black")
+        THEME_DIR="matte-black"
+        ;;
+    "Nord")
+        THEME_DIR="nord"
+        ;;
+    "Osaka Jade")
+        THEME_DIR="osaka-jade"
+        ;;
+    "Ristretto")
+        THEME_DIR="ristretto"
+        ;;
+    "Rose Pine")
+        THEME_DIR="rose-pine"
+        ;;
+    "Tokyo Night")
+        THEME_DIR="tokyo-night"
+        ;;
+    *)
+        echo "Tema não reconhecido: $CURRENT_THEME"
+        exit 1
+        ;;
+esac
+
+# Caminhos dos arquivos
+ALACRITTY_THEME="$HOME/.config/omarchy/themes/$THEME_DIR/alacritty.toml"
+KITTY_THEMES_DIR="$HOME/.config/kitty/themes"
+KITTY_THEME="$KITTY_THEMES_DIR/${THEME_DIR}.conf"
+
+# Criar diretório se necessário
+mkdir -p "$KITTY_THEMES_DIR"
+
+# Converter tema do Alacritty para Kitty se necessário
+if [[ ! -f "$KITTY_THEME" ]] || [[ "$ALACRITTY_THEME" -nt "$KITTY_THEME" ]]; then
+    echo "Convertendo tema $CURRENT_THEME para Kitty..."
+    convert_alacritty_to_kitty "$ALACRITTY_THEME" "$KITTY_THEME"
+fi
+
+# Aplicar tema
+apply_kitty_theme "$KITTY_THEME"

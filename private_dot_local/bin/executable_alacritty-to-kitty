@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+import re
+import sys
+
+def extract_color(content, color_name, section='primary'):
+    """Extrai cor do arquivo TOML do Alacritty"""
+    if section == 'primary':
+        pattern = f'^{color_name}\\s*=\\s*[\'"]([^\'"]*)[\'"]'
+        match = re.search(pattern, content, re.MULTILINE)
+        if match:
+            return match.group(1)
+    
+    elif section == 'normal':
+        # Encontrar seção [colors.normal]
+        normal_match = re.search(r'\[colors\.normal\](.*?)(?=\[|\Z)', content, re.DOTALL)
+        if normal_match:
+            pattern = f'^{color_name}\\s*=\\s*[\'"]([^\'"]*)[\'"]'
+            match = re.search(pattern, normal_match.group(1), re.MULTILINE)
+            if match:
+                return match.group(1)
+    
+    return '#000000'  # fallback
+
+def convert_theme(alacritty_file, kitty_file):
+    """Converte tema do Alacritty para Kitty"""
+    try:
+        with open(alacritty_file, 'r') as f:
+            content = f.read()
+        
+        # Extrair cores
+        bg = extract_color(content, 'background', 'primary')
+        fg = extract_color(content, 'foreground', 'primary')
+        
+        # Cores normais
+        black = extract_color(content, 'black', 'normal')
+        red = extract_color(content, 'red', 'normal')
+        green = extract_color(content, 'green', 'normal')
+        yellow = extract_color(content, 'yellow', 'normal')
+        blue = extract_color(content, 'blue', 'normal')
+        magenta = extract_color(content, 'magenta', 'normal')
+        cyan = extract_color(content, 'cyan', 'normal')
+        white = extract_color(content, 'white', 'normal')
+        
+        # Gerar arquivo Kitty
+        kitty_content = f"""# Auto-gerado a partir do tema Omarchy
+# Baseado em: {alacritty_file.split('/')[-1]}
+
+# Cores básicas
+foreground              {fg}
+background              {bg}
+background_opacity      0.9
+selection_foreground    {bg}
+selection_background    {fg}
+
+# Cores do cursor
+cursor                  {fg}
+cursor_text_color       {bg}
+
+# Cor do link URL
+url_color               {blue}
+
+# Cores das bordas
+active_border_color     {blue}
+inactive_border_color   {black}
+bell_border_color       {yellow}
+
+# Cores das abas
+active_tab_foreground   {bg}
+active_tab_background   {blue}
+inactive_tab_foreground {fg}
+inactive_tab_background {black}
+tab_bar_background      {bg}
+
+# As 16 cores do terminal
+# black
+color0 {black}
+color8 {black}
+
+# red
+color1 {red}
+color9 {red}
+
+# green
+color2  {green}
+color10 {green}
+
+# yellow
+color3  {yellow}
+color11 {yellow}
+
+# blue
+color4  {blue}
+color12 {blue}
+
+# magenta
+color5  {magenta}
+color13 {magenta}
+
+# cyan
+color6  {cyan}
+color14 {cyan}
+
+# white
+color7  {white}
+color15 {white}
+
+# Padding
+window_padding_width 10
+"""
+        
+        with open(kitty_file, 'w') as f:
+            f.write(kitty_content)
+        
+        print(f'Tema convertido: {kitty_file.split("/")[-1]}')
+        
+    except Exception as e:
+        print(f'Erro na conversão: {e}')
+        sys.exit(1)
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print('Uso: alacritty-to-kitty <arquivo_alacritty> <arquivo_kitty>')
+        sys.exit(1)
+    
+    convert_theme(sys.argv[1], sys.argv[2])

@@ -1,0 +1,35 @@
+#!/bin/bash
+# Script para configurar sincronização automática do tema Kitty com Omarchy
+
+echo "🎨 Configurando sincronização de tema Kitty com Omarchy..."
+
+# Criar diretório de temas do Kitty
+mkdir -p ~/.config/kitty/themes
+
+# Recarregar daemon do systemd
+systemctl --user daemon-reload
+
+# Habilitar e iniciar o serviço
+systemctl --user enable kitty-theme-watcher.service
+systemctl --user start kitty-theme-watcher.service
+
+# Verificar se o serviço está rodando
+if systemctl --user is-active --quiet kitty-theme-watcher.service; then
+    echo "✅ Serviço kitty-theme-watcher iniciado com sucesso"
+else
+    echo "❌ Falha ao iniciar o serviço kitty-theme-watcher"
+    systemctl --user status kitty-theme-watcher.service
+    exit 1
+fi
+
+# Executar sincronização inicial
+if command -v omarchy-theme-current &> /dev/null; then
+    echo "🔄 Executando sincronização inicial..."
+    ~/.local/bin/kitty-theme-sync
+    echo "✅ Tema inicial sincronizado: $(omarchy-theme-current)"
+else
+    echo "⚠️  Comando omarchy-theme-current não encontrado"
+fi
+
+echo "🎨 Configuração concluída! O Kitty agora sincroniza automaticamente com o tema do Omarchy."
+echo "📝 Para testar, use: omarchy-theme-set \"Nome do Tema\""

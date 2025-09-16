@@ -1,0 +1,13 @@
+[Unit]
+Description=Kitty Theme Synchronizer
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/rehem/.local/bin/kitty-theme-watcher
+Restart=always
+RestartSec=3
+Environment=DISPLAY=%i
+
+[Install]
+WantedBy=default.target
