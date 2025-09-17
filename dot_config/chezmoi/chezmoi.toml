@@ -1,0 +1,3 @@
+# Chezmoi configuration file
+# Enable symlink mode
+mode = "symlink"
