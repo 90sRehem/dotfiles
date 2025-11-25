@@ -1,6 +1,6 @@
 # Set a custom session root path. Default is `$HOME`.
 # Must be called before `initialize_session`.
-session_root "$HOME/Documentos/dev/work/hyperlocal/finance/"
+session_root "$HOME/Documents/dev/work/hyperlocal/finance/"
 
 # Create session with specified name if it does not already exist.
 if initialize_session "hyperlocal-banking"; then

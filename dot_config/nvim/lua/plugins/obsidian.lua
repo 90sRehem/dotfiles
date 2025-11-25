@@ -25,12 +25,12 @@ return {
     workspaces = {
       {
         name = "personal",
-        path = "~/Documentos/obsidian",
+        path = "~/Documents/obsidian",
       },
 
       {
         name = "hyperlocal-notes",
-        path = "~/Documentos/hyperlocal-notes",
+        path = "~/Documents/hyperlocal-notes",
       },
     },
     notes_subdir = "notes",
@@ -80,7 +80,7 @@ return {
     },
     -- see below for full list of options 👇
     templates = {
-      folder = "~/Documentos/obsidian/templates", -- Pasta onde estão seus templates
+      folder = "~/Documents/obsidian/templates", -- Pasta onde estão seus templates
       date_format = "%Y-%m-%d", -- Formato de data padrão
       time_format = "%H:%M", -- Formato de hora padrão
       substitutions = {

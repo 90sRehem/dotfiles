@@ -6,7 +6,13 @@
     "os": "#ACB0BE",
     "pink": "#F5BDE6",
     "text": "#494D64",
-    "wight": "#FFFFFF"
+    "wight": "#FFFFFF",
+    "green": "#A6E3A1",
+    "yellow": "#F9E2AF",
+    "orange": "#FAB387",
+    "red": "#F38BA8",
+    "purple": "#CBA6F7",
+    "teal": "#94E2D5"
   },
   "blocks": [
     {
@@ -70,6 +76,96 @@
           "background": "p:lavender",
           "type": "git",
           "style": "powerline"
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "right",
+      "segments": [
+        {
+          "properties": {
+            "cache_duration": "5m"
+          },
+          "template": " \ue718 {{ .Full }} ",
+          "foreground": "p:text",
+          "background": "p:green",
+          "leading_diamond": "\ue0b6",
+          "type": "node",
+          "style": "diamond"
+        },
+        {
+          "properties": {
+            "cache_duration": "5m"
+          },
+          "template": " \ue73c {{ .Full }} ",
+          "foreground": "p:text",
+          "background": "p:yellow",
+          "leading_diamond": "\ue0b6",
+          "type": "python",
+          "style": "diamond"
+        },
+        {
+          "properties": {
+            "cache_duration": "5m"
+          },
+          "template": " \uf489 {{ .Full }} ",
+          "foreground": "p:text",
+          "background": "p:orange",
+          "leading_diamond": "\ue0b6",
+          "type": "go",
+          "style": "diamond"
+        },
+        {
+          "properties": {
+            "cache_duration": "5m"
+          },
+          "template": " \ue7a8 {{ .Full }} ",
+          "foreground": "p:text",
+          "background": "p:purple",
+          "leading_diamond": "\ue0b6",
+          "type": "rust",
+          "style": "diamond"
+        },
+        {
+          "properties": {
+            "cache_duration": "2m",
+            "branch_icon": "\ue725 ",
+            "fetch_status": false,
+            "fetch_upstream_icon": false
+          },
+          "template": " {{ .HEAD }}{{ if .Working.Changed }} *{{ .Working.Changed }}{{ end }}{{ if .Staging.Changed }} +{{ .Staging.Changed }}{{ end }} ",
+          "foreground": "p:text",
+          "background": "p:lavender",
+          "leading_diamond": "\ue0b6",
+          "type": "git",
+          "style": "diamond"
+        },
+        {
+          "properties": {
+            "cache_duration": "1m",
+            "command": "date +%H:%M"
+          },
+          "template": " \uf017 {{ .Output }} ",
+          "foreground": "p:text",
+          "background": "p:teal",
+          "leading_diamond": "\ue0b6",
+          "type": "command",
+          "style": "diamond"
+        },
+        {
+          "properties": {
+            "cache_duration": "none"
+          },
+          "template": "{{ if .Env.VI_MODE }}{{ if eq .Env.VI_MODE \"NORMAL\" }} NORMAL {{ else if eq .Env.VI_MODE \"VISUAL\" }} VISUAL {{ else if eq .Env.VI_MODE \"V-LINE\" }} V-LINE {{ else if eq .Env.VI_MODE \"REPLACE\" }} REPLACE {{ else }} INSERT {{ end }}{{ else }} INSERT {{ end }}",
+          "foreground": "#1E1E2E",
+          "background_templates": [
+            "{{ if eq .Env.VI_MODE \"NORMAL\" }}#F38BA8{{ else if eq .Env.VI_MODE \"VISUAL\" }}#FAB387{{ else if eq .Env.VI_MODE \"V-LINE\" }}#FAB387{{ else if eq .Env.VI_MODE \"REPLACE\" }}#F9E2AF{{ else }}#A6E3A1{{ end }}"
+          ],
+          "leading_diamond": "\ue0b6",
+          "trailing_diamond": "\ue0b4",
+          "type": "text",
+          "style": "diamond"
         }
       ]
     }

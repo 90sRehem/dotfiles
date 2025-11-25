@@ -1,6 +1,6 @@
 # Set a custom session root path. Default is `$HOME`.
 # Must be called before `initialize_session`.
-session_root "$HOME/Documentos/dev/work/hyperlocal/hyperlocal-backoffice"
+session_root "$HOME/Documents/dev/work/hyperlocal/hyperlocal-backoffice"
 
 # Create session with specified name if it does not already exist. If no
 # argument is given, session name will be based on layout file name.

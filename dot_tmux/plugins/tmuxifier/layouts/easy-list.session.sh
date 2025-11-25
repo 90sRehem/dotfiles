@@ -1,6 +1,6 @@
 # Set a custom session root path. Default is `$HOME`.
 # Must be called before `initialize_session`.
-session_root "/home/rehem/Documentos/dev/personal/easy-list"
+session_root "/home/rehem/Documents/dev/personal/easy-list"
 
 # Create session with specified name if it does not already exist.
 if initialize_session "easy-list"; then
@@ -20,22 +20,22 @@ if initialize_session "easy-list"; then
   # Window 4: Terminal com splits para cada app + design system
   new_window "terminals"
   select_window "terminals"
-  
+
   # Split horizontal para criar 3 painéis
   split_v
   split_v
-  
+
   # Ajustar layout para painéis uniformes
   run_cmd "tmux select-layout even-vertical"
-  
+
   # Painel 1: Frontend terminal
   select_pane 1
   run_cmd "cd apps/web && clear && echo '🌐 Frontend Terminal' && echo 'Pronto para comandos do frontend (web)'"
-  
+
   # Painel 2: Backend terminal
   select_pane 2
   run_cmd "cd apps/api && clear && echo '⚡ Backend Terminal' && echo 'Pronto para comandos do backend (api)'"
-  
+
   # Painel 3: Design System terminal
   select_pane 3
   run_cmd "cd packages/design-system && clear && echo '🎨 Design System Terminal' && echo 'Pronto para comandos do design system'"

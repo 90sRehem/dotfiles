@@ -1,6 +1,6 @@
 # Set a custom session root path. Default is `$HOME`.
 # Must be called before `initialize_session`.
-session_root "$HOME/Documentos/dev/work/hyperlocal/DS-Vital"
+session_root "$HOME/Documents/dev/work/hyperlocal/DS-Vital"
 
 # Create session with specified name if it does not already exist. If no
 # argument is given, session name will be based on layout file name.

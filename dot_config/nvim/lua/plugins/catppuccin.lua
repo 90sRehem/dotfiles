@@ -1,7 +1,7 @@
 return {
   {
     "catppuccin/nvim",
-    lazy = false,
+    lazy = true, -- Desabilitado para usar tema dinâmico do Omarchy
     name = "catppuccin",
     priority = 1000,
     config = function()

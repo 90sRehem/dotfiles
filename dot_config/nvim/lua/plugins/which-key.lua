@@ -29,6 +29,15 @@ return {
         { "<leader>otc", "<cmd>ObsidianTOC<CR>", desc = "Gerar tabela de conteúdos" },
         { "<leader>ow", "<cmd>ObsidianWorkspace<CR>", desc = "Alternar workspace" },
       },
+      -- {
+      --   mode = { "n", "v" },
+      --   { "<leader>f", group = "Flash" },
+      --   { "<leader>fs", desc = "Flash Jump" },
+      --   { "<leader>ft", desc = "Flash Treesitter" },
+      --   { "<leader>fr", desc = "Remote Flash" },
+      --   { "<leader>fR", desc = "Treesitter Search" },
+      --   { "<leader>fg", desc = "Toggle Flash Search" },
+      -- },
     },
     win = {
       title_pos = "center",

@@ -1,13 +1,13 @@
 [Unit]
-Description=Tmux Theme Synchronizer
+Description=Tmux Theme Watcher - Auto update tmux theme when Omarchy theme changes
 After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/home/rehem/.local/bin/tmux-theme-watcher
+ExecStart=/home/rehem/.config/tmux/theme-watcher.sh
 Restart=always
-RestartSec=3
-Environment=DISPLAY=%i
+RestartSec=5
+Environment=DISPLAY=:0
 
 [Install]
 WantedBy=default.target
