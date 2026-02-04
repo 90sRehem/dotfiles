@@ -14,3 +14,6 @@ vim.cmd([[
   highlight RainbowDelimiterViolet guifg=#C678DD
   highlight RainbowDelimiterCyan guifg=#56B6C2
 ]])
+
+-- Enable this option to avoid conflicts with Prettier.
+vim.g.lazyvim_prettier_needs_config = true
