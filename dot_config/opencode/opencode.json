@@ -1,79 +1,19 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "keybinds": {
-    "messages_page_up": "<leader>k",
-    "messages_page_down": "<leader>j",
-    "messages_copy": "<leader>y"
-  },
-  "tools": {
-    "write": true
-  },
-  "model": "anthropic/claude-sonnet-4-20250514",
-  "instructions": ["~/.config/opencode/instructions.md"],
-
-  "provider": {
-    "lmstudio": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "LM Studio (Local)",
-      "options": {
-        "baseURL": "http://127.0.0.1:1234/v1"
-      },
-      "models": {
-        "openai/gpt-oss-20b": {
-          "name": "OpenAI GPT-OSS 20B",
-          "limit": { "context": 4096, "output": 1024 },
-          "options": {
-            "num_ctx": 4096,
-            "temperature": 0.3,
-            "top_p": 0.9,
-            "max_tokens": 1024
-          }
-        },
-        "qwen3-1.7b": {
-          "name": "Qwen 3.7B",
-          "id": "qwen/qwen3-1.7b",
-          "limit": { "context": 8192, "output": 1024 },
-          "options": {
-            "num_ctx": 8192,
-            "temperature": 0.7,
-            "top_p": 0.9,
-            "max_tokens": 1024
-          }
-        },
-        "qwen-coder-7b": {
-          "name": "Qwen Coder 7B",
-          "id": "qwen2.5-coder-7b",
-          "limit": { "context": 32768, "output": 2048 },
-          "options": {
-            "num_ctx": 32768,
-            "temperature": 0.2,
-            "top_p": 0.95,
-            "max_tokens": 2048
-          }
-        },
-        "mistral-7b": {
-          "name": "Mistral 7B Instruct",
-          "id": "mistralai/mistral-7b-instruct-v0.3",
-          "limit": { "context": 8192, "output": 2048 },
-          "options": {
-            "num_ctx": 8192,
-            "temperature": 0.3,
-            "top_p": 0.9,
-            "max_tokens": 2048
-          }
-        },
-        "gpt-oss-20b": {
-          "name": "GPT-OSS 20B",
-          "id": "openai/gpt-oss-20b",
-          "limit": { "context": 4096, "output": 1024 },
-          "options": {
-            "num_ctx": 4096,
-            "temperature": 0.3,
-            "top_p": 0.9,
-            "max_tokens": 1024
-          }
-        }
-      }
+  "theme": "system",
+  "autoupdate": false,
+  "mcp": {
+    "pencil": {
+      "command": [
+        "/tmp/.mount_pencilcrKCnD/resources/app.asar.unpacked/out/mcp-server-linux-x64",
+        "--app",
+        "desktop"
+      ],
+      "enabled": true,
+      "type": "local"
     }
-  }
+  },
+  "plugin": [
+    "opencode-claude-auth"
+  ]
 }

@@ -29,14 +29,14 @@ return {
       },
 
       {
-        name = "hyperlocal-notes",
-        path = "~/Documents/hyperlocal-notes",
+        name = "sdwc-notes",
+        path = "~/Documents/dev/work/sdwc/notes",
       },
     },
     notes_subdir = "notes",
     daily_notes = {
       -- Optional, if you keep daily notes in a separate directory.
-      folder = "notes/dailies",
+      folder = "dailies",
       -- Optional, default tags to add to each new daily note created.
       default_tags = { "daily-notes" },
       -- Optional, if you want to automatically insert a template from your template directory like 'daily.md'
