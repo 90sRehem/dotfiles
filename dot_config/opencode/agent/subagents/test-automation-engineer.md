@@ -1,9 +1,9 @@
 
 ---
 context_files:
-  - path: "context/project/project-context.md"
-  - path: "context/core/essential-patterns.md"
-  - path: "context/tooling/biome-bun-docker.md"
+  - path: "/home/rehem/.config/opencode/context/project/project-context.md"
+  - path: "/home/rehem/.config/opencode/context/core/essential-patterns.md"
+  - path: "/home/rehem/.config/opencode/context/tooling/biome-bun-docker.md"
 description: >-
   Use this agent when you need comprehensive test coverage for code changes,
   including writing unit and integration tests, executing test suites,

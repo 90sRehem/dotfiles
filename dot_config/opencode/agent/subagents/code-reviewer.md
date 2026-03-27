@@ -1,9 +1,9 @@
 ---
 context_files:
-  - path: "context/project/project-context.md"
-  - path: "context/core/essential-patterns.md"
-  - path: "context/core/anti-simulation-directive.md"
-  - path: "context/tooling/biome-bun-docker.md"
+  - path: "/home/rehem/.config/opencode/context/project/project-context.md"
+  - path: "/home/rehem/.config/opencode/context/core/essential-patterns.md"
+  - path: "/home/rehem/.config/opencode/context/core/anti-simulation-directive.md"
+  - path: "/home/rehem/.config/opencode/context/tooling/biome-bun-docker.md"
 description: >-
   Use this agent when code is ready for final review before commit/push. This 
   agent performs comprehensive code review focusing on style consistency, 

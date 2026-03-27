@@ -1,11 +1,11 @@
 
 ---
 context_files:
-  - path: "context/project/project-context.md"
-  - path: "context/core/essential-patterns.md"
-  - path: "context/backend/domain-patterns.md"
-  - path: "context/backend/nestjs-clean-architecture.md"
-  - path: "context/tooling/biome-bun-docker.md"
+  - path: "/home/rehem/.config/opencode/context/project/project-context.md"
+  - path: "/home/rehem/.config/opencode/context/core/essential-patterns.md"
+  - path: "/home/rehem/.config/opencode/context/backend/domain-patterns.md"
+  - path: "/home/rehem/.config/opencode/context/backend/nestjs-clean-architecture.md"
+  - path: "/home/rehem/.config/opencode/context/tooling/biome-bun-docker.md"
 description: >-
   Use this agent when the user needs precise, delegated implementation work
   completed without architectural changes. This agent executes specific coding

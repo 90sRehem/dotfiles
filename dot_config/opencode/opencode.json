@@ -5,7 +5,7 @@
   "mcp": {
     "pencil": {
       "command": [
-        "/tmp/.mount_pencilcrKCnD/resources/app.asar.unpacked/out/mcp-server-linux-x64",
+        "/tmp/.mount_pencilX5EWgB/resources/app.asar.unpacked/out/mcp-server-linux-x64",
         "--app",
         "desktop"
       ],
