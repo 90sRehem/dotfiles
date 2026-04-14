@@ -5,15 +5,24 @@
   "mcp": {
     "pencil": {
       "command": [
-        "/tmp/.mount_pencilX5EWgB/resources/app.asar.unpacked/out/mcp-server-linux-x64",
+        "/tmp/.mount_pencil6KlABa/resources/app.asar.unpacked/out/mcp-server-linux-x64",
         "--app",
         "desktop"
       ],
-      "enabled": true,
+      "enabled": false,
       "type": "local"
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true,
+      "headers": {
+        "CONTEXT7_API_KEY": "ctx7sk-352e7be1-6557-42cc-a17e-cb30abe5f201"
+      }
     }
   },
   "plugin": [
-    "opencode-claude-auth"
+    "opencode-claude-auth",
+    "@opencode_weave/weave"
   ]
 }

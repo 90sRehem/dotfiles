@@ -1,0 +1,174 @@
+{
+  "version": 3,
+  "skills": {
+    "frontend-design": {
+      "source": "anthropics/claude-code",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/anthropics/claude-code.git",
+      "skillPath": "plugins/frontend-design/skills/frontend-design/SKILL.md",
+      "skillFolderHash": "3bd61bab4d6b858c5d3af8adf14b917ce853e4c5",
+      "installedAt": "2026-01-28T00:59:40.252Z",
+      "updatedAt": "2026-01-28T01:31:55.303Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "installedAt": "2026-01-28T00:59:45.912Z",
+      "updatedAt": "2026-01-28T00:59:45.912Z"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "skillFolderHash": "079b06a135401704ea94ab74c7c9d86c92ba259f",
+      "installedAt": "2026-01-28T01:01:08.295Z",
+      "updatedAt": "2026-01-28T01:01:08.295Z"
+    },
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/better-auth/skills.git",
+      "skillPath": "better-auth/best-practices/SKILL.md",
+      "skillFolderHash": "83bdaa60f65da278dc513a64127f4e4db759cd20",
+      "installedAt": "2026-01-28T01:02:05.276Z",
+      "updatedAt": "2026-01-28T01:02:05.276Z"
+    },
+    "building-native-ui": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/expo/skills.git",
+      "skillPath": "plugins/expo-app-design/skills/building-native-ui/SKILL.md",
+      "skillFolderHash": "9e899e3ea35aecf476bbd1b1f440025b66712d46",
+      "installedAt": "2026-01-28T01:08:42.377Z",
+      "updatedAt": "2026-01-28T01:08:42.377Z"
+    },
+    "brainstorming": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/brainstorming/SKILL.md",
+      "skillFolderHash": "761c2f359474328f40d73db9cb4cc1f5721917e5",
+      "installedAt": "2026-01-28T01:18:07.013Z",
+      "updatedAt": "2026-01-28T01:18:07.013Z"
+    },
+    "upgrading-expo": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/expo/skills.git",
+      "skillPath": "plugins/upgrading-expo/skills/upgrading-expo/SKILL.md",
+      "skillFolderHash": "8c156bf885c5068adf346d743822199d1b66989d",
+      "installedAt": "2026-01-28T01:24:25.517Z",
+      "updatedAt": "2026-01-28T01:24:25.517Z"
+    },
+    "native-data-fetching": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/expo/skills.git",
+      "skillPath": "plugins/expo-app-design/skills/native-data-fetching/SKILL.md",
+      "skillFolderHash": "3aae1b5c10b87a251052a355daea460a9ecd7dcf",
+      "installedAt": "2026-01-28T01:24:47.907Z",
+      "updatedAt": "2026-01-28T01:24:47.907Z"
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/composition-patterns/SKILL.md",
+      "skillFolderHash": "7a651a19b1658c4cd320a5e984c1be4b99d97c2c",
+      "installedAt": "2026-01-28T01:25:47.651Z",
+      "updatedAt": "2026-01-28T01:25:47.651Z"
+    },
+    "react-native-best-practices": {
+      "source": "callstackincubator/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/callstackincubator/agent-skills.git",
+      "skillPath": "skills/react-native-best-practices/SKILL.md",
+      "skillFolderHash": "8449934e63e4b2c9ea5e42796f7b9243f20eaee0",
+      "installedAt": "2026-01-28T01:26:08.221Z",
+      "updatedAt": "2026-01-28T01:26:08.221Z"
+    },
+    "vercel-react-native-skills": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/react-native-skills/SKILL.md",
+      "skillFolderHash": "8b4c6a51914e2111ab6f4f00cb81778652aa241d",
+      "installedAt": "2026-01-28T01:26:58.953Z",
+      "updatedAt": "2026-01-28T01:26:58.953Z"
+    },
+    "test-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/test-driven-development/SKILL.md",
+      "skillFolderHash": "98904a7d8e0e04b9bd46220b9b17298f45fe0b72",
+      "installedAt": "2026-01-28T01:27:45.893Z",
+      "updatedAt": "2026-01-28T01:27:45.893Z"
+    },
+    "agent-md-refactor": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/softaworks/agent-toolkit.git",
+      "skillPath": "skills/agent-md-refactor/SKILL.md",
+      "skillFolderHash": "89a8fede359cb48c66f1af44c5aa8fc07b82cded",
+      "installedAt": "2026-01-28T01:28:30.558Z",
+      "updatedAt": "2026-01-28T01:28:30.558Z"
+    },
+    "using-git-worktrees": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/obra/superpowers.git",
+      "skillPath": "skills/using-git-worktrees/SKILL.md",
+      "skillFolderHash": "18255639c7e7df746447d0e6cbded2cf0278b061",
+      "installedAt": "2026-01-28T01:30:49.165Z",
+      "updatedAt": "2026-01-28T01:30:49.165Z"
+    },
+    "turborepo": {
+      "source": "vercel/turborepo",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel/turborepo.git",
+      "skillPath": "skills/turborepo/SKILL.md",
+      "skillFolderHash": "93c5c771f2945998af36f266df44b525a79c6e2a",
+      "installedAt": "2026-01-28T01:31:10.383Z",
+      "updatedAt": "2026-01-28T01:31:10.383Z"
+    },
+    "typescript-advanced-types": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/javascript-typescript/skills/typescript-advanced-types/SKILL.md",
+      "skillFolderHash": "782e78a277e639718b0f9fec905ca51bb16a5a95",
+      "installedAt": "2026-01-28T01:31:31.860Z",
+      "updatedAt": "2026-01-28T01:31:31.860Z"
+    },
+    "shadcn-ui": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/giuseppe-trisciuoglio/developer-kit.git",
+      "skillPath": "skills/shadcn-ui/SKILL.md",
+      "skillFolderHash": "5cefbbb22eaf4f3380cb45b5022c7c1ff0383ea2",
+      "installedAt": "2026-01-28T01:32:14.257Z",
+      "updatedAt": "2026-01-28T01:32:14.257Z"
+    },
+    "api-design-principles": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/wshobson/agents.git",
+      "skillPath": "plugins/backend-development/skills/api-design-principles/SKILL.md",
+      "skillFolderHash": "d9f49b5a4c69c1372041ac3892b9c4a3bdd4b02a",
+      "installedAt": "2026-01-28T01:33:01.708Z",
+      "updatedAt": "2026-01-28T01:33:01.708Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "claude-code",
+    "opencode"
+  ]
+}

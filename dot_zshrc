@@ -1,19 +1,16 @@
-# If not running interactively, don't do anything
+# OPENSPEC:START
+# OpenSpec shell completions configuration
+fpath=("/home/rehem/.zsh/completions" $fpath)
+autoload -Uz compinit
+compinit
+# OPENSPEC:END
+
+# If not running interactively, don't do anything 
 [[ $- != *i* ]] && return
 
 # Load omarchy-zsh configuration
-if [[ -d /usr/share/omarchy-zsh/conf.d ]]; then
-  for config in /usr/share/omarchy-zsh/conf.d/*.zsh; do
-    [[ -f "$config" ]] && source "$config"
-  done
-fi
-
-# Load omarchy-zsh functions and aliases
-if [[ -d /usr/share/omarchy-zsh/functions ]]; then
-  for func in /usr/share/omarchy-zsh/functions/*.zsh; do
-    [[ -f "$func" ]] && source "$func"
-  done
-fi
+[[ -f /usr/share/omarchy-zsh/shell/zoptions ]] && source /usr/share/omarchy-zsh/shell/zoptions
+[[ -f /usr/share/omarchy-zsh/shell/all ]] && source /usr/share/omarchy-zsh/shell/all
 
 # Add your own customizations below
 # ============================================================================
@@ -227,7 +224,7 @@ alias tx='tmuxifier'              # Tmuxifier command
 alias txs='tmuxifier s'       # Start project session
 alias txn='tmuxifier new'         # Create new project template
 alias txl='tmuxifier list'        # List available projects
-alias txe='tmuxifier edit'        # Edit project template
+alias txe='tmuxifier edit-session'        # Edit project template
 alias txd='tmuxifier delete'      # Delete project template
 alias txc='tmuxifier copy'        # Copy project template
 alias txw='tmuxifier load-window' # Load window layout
@@ -269,6 +266,8 @@ alias lzg='lazygit'  # Lazygit TUI
 alias d='docker'    # Docker containerization
 alias lzd='lazydocker' # Lazydocker TUI
 alias y='yazi'      # Yazi file manager
+alias c="opencode"  # Opencode code TUI
+alias cc="claude"   # Claude code TUI
 
 # ============================================================================
 # GIT ALIASES
@@ -384,8 +383,8 @@ cwatch() {
 # ============================================================================
 
 # Tmuxifier setup
-export TMUXIFIER="$HOME/.tmux/plugins/tmuxifier"
-export PATH="$HOME/.tmux/plugins/tmuxifier/bin:$PATH"
+export TMUXIFIER="$HOME/.config/tmux/plugins/tmuxifier"
+export PATH="$HOME/.config/tmux/plugins/tmuxifier/bin:$PATH"
 eval "$(tmuxifier init -)"
 
 # ============================================================================
@@ -471,6 +470,30 @@ fi
 alias cpwd='echo -n "$(pwd)" | xclip -selection clipboard'
 
 # ============================================================================
+# SSH AGENT CONFIGURATION
+# ============================================================================
+
+# Start SSH agent and add keys automatically
+# This ensures you don't need to enter passphrase for every git operation
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  # Check for a currently running instance of the agent
+  RUNNING_AGENT="`ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]'`"
+  if [ "$RUNNING_AGENT" = "0" ]; then
+    # Launch a new instance of the agent
+    ssh-agent -s &> $HOME/.ssh/ssh-agent
+  fi
+  eval `cat $HOME/.ssh/ssh-agent` > /dev/null
+fi
+
+# Add SSH keys if not already added
+# Using ssh-add -l to check if keys are loaded, then add them if not
+ssh-add -l &>/dev/null
+if [ "$?" = "1" ]; then
+  # No keys loaded, add them
+  ssh-add ~/.ssh/id_rsa 2>/dev/null
+fi
+
+# ============================================================================
 # END OF CONFIGURATION
 # ============================================================================
 
@@ -487,3 +510,14 @@ alias tm='task-master'
 alias taskmaster='task-master'
 
 #
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/rehem/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+# Disable Claude Code compatibility in OpenCode (single source of truth: ~/.agents/skills/)
+export OPENCODE_DISABLE_CLAUDE_CODE=1
+
+# Figma MCP token for OpenCode
+export FIGMA_OAUTH_TOKEN=""
