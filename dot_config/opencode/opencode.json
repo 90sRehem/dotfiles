@@ -22,7 +22,6 @@
     }
   },
   "plugin": [
-    "opencode-claude-auth",
-    "@opencode_weave/weave"
+    "opencode-claude-auth"
   ]
 }
