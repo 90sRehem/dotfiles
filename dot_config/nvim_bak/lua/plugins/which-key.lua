@@ -5,6 +5,7 @@ return {
   opts = {
     defaults = {},
     spec = {
+      { "<leader>gH", group = "GitHub" },
       {
         mode = { "n", "v" },
         { "<leader>o", group = "Obsidian" },

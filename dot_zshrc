@@ -268,6 +268,7 @@ alias lzd='lazydocker' # Lazydocker TUI
 alias y='yazi'      # Yazi file manager
 alias c="opencode"  # Opencode code TUI
 alias cc="claude"   # Claude code TUI
+alias pi='~/bin/pi-cc' # Pi coding agent (auto-syncs Claude tokens + Claude Code headers)
 
 # ============================================================================
 # GIT ALIASES
@@ -521,3 +522,10 @@ export OPENCODE_DISABLE_CLAUDE_CODE=1
 
 # Figma MCP token for OpenCode
 export FIGMA_OAUTH_TOKEN=""
+
+
+
+# >>> opencode-agent-tmux >>>
+export OPENCODE_PORT=4096
+alias opencode='opencode-tmux'
+# <<< opencode-agent-tmux <<<

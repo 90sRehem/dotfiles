@@ -27,10 +27,13 @@ return {
         name = "personal",
         path = "~/Documents/obsidian",
       },
-
       {
         name = "sdwc-notes",
         path = "~/Documents/dev/work/sdwc/notes",
+      },
+      {
+        name = "globo-notes",
+        path = "~/Documents/dev/work/act/globo/obsidian",
       },
     },
     notes_subdir = "notes",

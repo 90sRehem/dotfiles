@@ -1,0 +1,70 @@
+return {
+  "stevearc/conform.nvim",
+  opts = {
+    formatters = {
+      ["markdown-toc"] = {
+        condition = function(_, ctx)
+          if not ctx or not ctx.buf then
+            return false
+          end
+          for _, line in ipairs(vim.api.nvim_buf_get_lines(ctx.buf, 0, -1, false)) do
+            if line:find("<!%-%- toc %-%->") then
+              return true
+            end
+          end
+        end,
+      },
+      ["markdownlint-cli2"] = {
+        condition = function(_, ctx)
+          if not ctx or not ctx.buf then
+            return false
+          end
+          local diag = vim.tbl_filter(function(d)
+            return d.source == "markdownlint"
+          end, vim.diagnostic.get(ctx.buf))
+          return #diag > 0
+        end,
+      },
+      ["sql_formatter"] = {
+        args = { "-c", "/home/rehem/.config/nvim/.sql-formatter.json" },
+      },
+      ["biome"] = {
+        require_cwd = true,
+        condition = function(_, ctx)
+          if not ctx.filename then
+            return false
+          end
+          
+          local linter_detection = require("config.linter-detection")
+          return linter_detection.should_use_biome(ctx.filename)
+        end,
+      },
+      ["prettier"] = {
+        condition = function(_, ctx)
+          if not ctx.filename then
+            return false
+          end
+          
+          local linter_detection = require("config.linter-detection")
+          return linter_detection.should_use_eslint(ctx.filename)
+        end,
+      },
+    },
+    formatters_by_ft = {
+      lua = { "stylua" },
+      yaml = { "yamlfix" },
+      markdown = { "prettier", "markdownlint-cli2", "markdown-toc" },
+      ["markdown.mdx"] = { "prettier", "markdownlint-cli2", "markdown-toc" },
+      sql = { "sql_formatter" },
+      mysql = { "sql_formatter" },
+      plsql = { "sql_formatter" },
+      postgres = { "sql_formatter" },
+      javascript = { "biome", "prettier" },
+      javascriptreact = { "biome", "prettier" },
+      typescript = { "biome", "prettier" },
+      typescriptreact = { "biome", "prettier" },
+      json = { "biome", "prettier" },
+      jsonc = { "biome", "prettier" },
+    },
+  },
+}

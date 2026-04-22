@@ -6,7 +6,7 @@
 --
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
-
+--
 -- no auto continue comments on new line
 vim.api.nvim_create_autocmd("FileType", {
   group = vim.api.nvim_create_augroup("no_auto_comment", {}),
@@ -15,10 +15,10 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- auto reload file when changed externally
-vim.api.nvim_create_autocmd({ "FileChangedShellPost" }, {
-  group = vim.api.nvim_create_augroup("auto_reload", {}),
-  callback = function(args)
-    vim.cmd("checktime " .. args.buf)
-  end,
-})
+-- vim.api.nvim_create_autocmd("BufRead", {
+--   group = vim.api.nvim_create_augroup("dotenv_ft", { clear = true }),
+--   pattern = { ".env", ".env.*" },
+--   callback = function()
+--     vim.bo.filetype = "dosini"
+--   end,
+-- })

@@ -42,49 +42,10 @@ return {
       local buf_set_keymap = vim.api.nvim_buf_set_keymap
       local opts = { noremap = true, silent = true }
 
-      -- Keymaps essenciais do LSP (baseados no LazyVim)
-      buf_set_keymap(
-        bufnr,
-        "n",
-        "gd",
-        "<cmd>lua vim.lsp.buf.definition()<CR>",
-        vim.tbl_extend("force", opts, { desc = "Goto Definition" })
-      )
-      buf_set_keymap(
-        bufnr,
-        "n",
-        "gr",
-        "<cmd>lua vim.lsp.buf.references()<CR>",
-        vim.tbl_extend("force", opts, { desc = "References" })
-      )
-      buf_set_keymap(
-        bufnr,
-        "n",
-        "gI",
-        "<cmd>lua vim.lsp.buf.implementation()<CR>",
-        vim.tbl_extend("force", opts, { desc = "Goto Implementation" })
-      )
-      buf_set_keymap(
-        bufnr,
-        "n",
-        "gy",
-        "<cmd>lua vim.lsp.buf.type_definition()<CR>",
-        vim.tbl_extend("force", opts, { desc = "Goto Type Definition" })
-      )
-      buf_set_keymap(
-        bufnr,
-        "n",
-        "gD",
-        "<cmd>lua vim.lsp.buf.declaration()<CR>",
-        vim.tbl_extend("force", opts, { desc = "Goto Declaration" })
-      )
-      buf_set_keymap(
-        bufnr,
-        "n",
-        "K",
-        "<cmd>lua vim.lsp.buf.hover()<CR>",
-        vim.tbl_extend("force", opts, { desc = "Hover" })
-      )
+      -- Keymaps de navegação LSP (gd, gr, gI, gy, gD, K) são definidos pelo Snacks.picker
+      -- Aqui mantemos apenas os que não estão no snacks.lua
+
+      -- Signature Help
       buf_set_keymap(
         bufnr,
         "n",
@@ -93,7 +54,7 @@ return {
         vim.tbl_extend("force", opts, { desc = "Signature Help" })
       )
 
-      -- Code Actions - O mais importante!
+      -- Code Actions
       buf_set_keymap(
         bufnr,
         "n",
@@ -123,6 +84,28 @@ return {
         vim.tbl_extend("force", opts, { desc = "Source Action" })
       )
 
+      -- Organize Imports (TypeScript/JavaScript)
+      vim.keymap.set("n", "<leader>co", function()
+        vim.lsp.buf.code_action({
+          apply = true,
+          context = {
+            only = { "source.organizeImports" },
+            diagnostics = {},
+          },
+        })
+      end, { buffer = bufnr, desc = "Organize Imports" })
+
+      -- Remove Unused Imports (TypeScript/JavaScript)
+      vim.keymap.set("n", "<leader>cu", function()
+        vim.lsp.buf.code_action({
+          apply = true,
+          context = {
+            only = { "source.removeUnused.ts" },
+            diagnostics = {},
+          },
+        })
+      end, { buffer = bufnr, desc = "Remove Unused Imports" })
+
       -- Formatação
       if client.server_capabilities.documentFormattingProvider then
         buf_set_keymap(
@@ -144,78 +127,8 @@ return {
       end
     end
 
-    -- Função inline para detecção inteligente Biome vs ESLint
-    local function find_nearest_config(file_path)
-      local util = require("lspconfig.util")
-
-      -- Find ESLint config (local priority)
-      local eslint_root = util.root_pattern(
-        ".eslintrc",
-        ".eslintrc.js",
-        ".eslintrc.json",
-        ".eslintrc.yaml",
-        ".eslintrc.yml",
-        "eslint.config.js",
-        "eslint.config.mjs",
-        "eslint.config.cjs",
-        "package.json" -- Fallback para projetos com eslint no package.json
-      )(file_path)
-
-      -- Verificar se é realmente um projeto ESLint quando package.json for encontrado
-      if
-        eslint_root
-        and not util.root_pattern(
-          ".eslintrc",
-          ".eslintrc.js",
-          ".eslintrc.json",
-          ".eslintrc.yaml",
-          ".eslintrc.yml",
-          "eslint.config.js",
-          "eslint.config.mjs",
-          "eslint.config.cjs"
-        )(file_path)
-      then
-        -- É package.json, verificar se tem eslint
-        local package_json = eslint_root .. "/package.json"
-        local f = io.open(package_json, "r")
-        if f then
-          local content = f:read("*all")
-          f:close()
-          if not content:match('"eslint"') then
-            eslint_root = nil -- Não é um projeto ESLint
-          end
-        else
-          eslint_root = nil
-        end
-      end
-
-      -- Find Biome config (can be parent)
-      local biome_root = util.root_pattern("biome.json", "biome.jsonc")(file_path)
-
-      -- ESLint local beats Biome remote (migration-friendly)
-      if eslint_root and biome_root then
-        -- Calculate distances by counting path separators
-        local file_dir = vim.fn.fnamemodify(file_path, ":h")
-        local eslint_rel = string.gsub(file_dir, vim.fn.fnamemodify(eslint_root, ":p"), "")
-        local biome_rel = string.gsub(file_dir, vim.fn.fnamemodify(biome_root, ":p"), "")
-
-        local eslint_distance = select(2, string.gsub(eslint_rel, "/", ""))
-        local biome_distance = select(2, string.gsub(biome_rel, "/", ""))
-
-        -- ESLint wins if closer or equal distance (local preference)
-        if eslint_distance <= biome_distance then
-          return { use_biome = false, use_eslint = true, biome_root = biome_root, eslint_root = eslint_root }
-        else
-          return { use_biome = true, use_eslint = false, biome_root = biome_root, eslint_root = eslint_root }
-        end
-      elseif eslint_root then
-        return { use_biome = false, use_eslint = true, eslint_root = eslint_root }
-      elseif biome_root then
-        return { use_biome = true, use_eslint = false, biome_root = biome_root }
-      else
-        return { use_biome = false, use_eslint = false }
-      end
-    end
+    -- Usar utilitário centralizado para detecção de linters
+    local linter_detection = require("config.linter-detection")
 
     -- Configuração do Biome LSP
     lspconfig.biome.setup({
@@ -228,18 +141,21 @@ return {
         },
       },
       root_dir = function(fname)
-        local config = find_nearest_config(fname)
-        return config.use_biome and config.biome_root or nil
+        return linter_detection.get_biome_root(fname)
       end,
     })
 
-    -- Configuração do ESLint LSP
-    lspconfig.eslint.setup({
+    -- Configuração do ESLint LSP (apenas quando explicitamente configurado)
+    local eslint_config = {
       capabilities = capabilities,
       on_attach = on_attach,
+      -- Desabilitar completamente se não houver configuração ESLint
       root_dir = function(fname)
-        local config = find_nearest_config(fname)
-        return config.use_eslint and config.eslint_root or nil
+        local should_use_eslint = linter_detection.should_use_eslint(fname)
+        if not should_use_eslint then
+          return nil
+        end
+        return linter_detection.get_eslint_root(fname)
       end,
       cmd = {
         vim.fn.expand("~/.local/share/nvim/mason/bin/vscode-eslint-language-server"),
@@ -251,7 +167,7 @@ return {
         "typescript",
         "typescriptreact",
       },
-      single_file_support = true,
+      single_file_support = false, -- Desabilitar single file para forçar root_dir
       settings = {
         eslint = {
           codeAction = {
@@ -281,7 +197,13 @@ return {
           },
         },
       },
-    })
+    }
+    
+    -- Só aplicar configuração ESLint se Mason tiver o servidor instalado
+    local eslint_server_path = vim.fn.expand("~/.local/share/nvim/mason/bin/vscode-eslint-language-server")
+    if vim.fn.executable(eslint_server_path) == 1 then
+      lspconfig.eslint.setup(eslint_config)
+    end
 
     -- Configuração do VTSLS (TypeScript)
     lspconfig.vtsls.setup({
