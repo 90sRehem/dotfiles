@@ -1,3 +1,4 @@
+{{- if eq .chezmoi.os "linux" -}}
 #!/bin/bash
 # Script para configurar sincronização automática do tema Kitty com Omarchy
 
@@ -33,3 +34,4 @@ fi
 
 echo "🎨 Configuração concluída! O Kitty agora sincroniza automaticamente com o tema do Omarchy."
 echo "📝 Para testar, use: omarchy-theme-set \"Nome do Tema\""
+{{- end }}

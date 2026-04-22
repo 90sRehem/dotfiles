@@ -1,3 +1,4 @@
+{{- if eq .chezmoi.os "linux" -}}
 #!/bin/bash
 
 echo "Instalando tema Plymouth Delta Corps via chezmoi..."
@@ -40,3 +41,4 @@ sudo plymouth-set-default-theme delta-corps --rebuild-initrd
 
 echo "Tema Delta Corps instalado e ativado via chezmoi!"
 echo "Reinicie o sistema para ver o novo logo."
+{{- end }}

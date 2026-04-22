@@ -1,0 +1,21 @@
+README.md
+LICENSE
+
+{{- if ne .chezmoi.os "linux" }}
+# Linux-only: ignore on non-Linux
+.config/hypr
+.config/waybar
+.config/kitty
+.config/tmux
+.config/systemd
+.config/splashscreens
+.config/xdg-desktop-portal
+packages_aur.txt
+packages_explicit.txt
+{{- end }}
+
+{{- if ne .chezmoi.os "darwin" }}
+# Mac-only: ignore on non-Mac
+.aerospace.toml
+.config/sketchybar
+{{- end }}

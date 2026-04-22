@@ -1,3 +1,4 @@
+{{- if eq .chezmoi.os "linux" -}}
 #!/bin/bash
 # Script para configurar sincronização automática do tema tmux com Omarchy
 
@@ -40,3 +41,4 @@ fi
 
 echo "🎨 Configuração do tmux concluída! O tmux agora sincroniza automaticamente com o tema do Omarchy."
 echo "📝 Para testar, use: omarchy-theme-set \"Nome do Tema\""
+{{- end }}

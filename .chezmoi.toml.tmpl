@@ -1,0 +1,9 @@
+[data]
+    os = "{{ .chezmoi.os }}"
+    hostname = "{{ .chezmoi.hostname }}"
+{{- if eq .chezmoi.os "darwin" }}
+    editor = "nvim"
+    brew_prefix = "/opt/homebrew"
+{{- else }}
+    editor = "nvim"
+{{- end }}

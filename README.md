@@ -34,6 +34,20 @@ gh auth login
 # Seguir instruções interativas
 ```
 
+## Setup
+
+### Linux (Arch)
+```bash
+chezmoi init --apply git@github.com-90srehem:90sRehem/dotfiles.git --branch arch
+```
+
+### macOS
+```bash
+chezmoi init --apply https://github.com/90sRehem/dotfiles.git --branch arch
+```
+
+Chezmoi automatically applies OS-appropriate configs via `.chezmoiignore` and template conditionals.
+
 ### Aplicar Configurações
 
 #### Opção A: SSH (Recomendado)

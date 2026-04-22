@@ -1,0 +1,68 @@
+PLUGIN_DIR="$CONFIG_DIR/plugins"
+
+##### Bar Appearance #####
+sketchybar --bar position=top height=40 blur_radius=30 color=0x40000000
+
+##### Changing Defaults #####
+default=(
+  padding_left=5
+  padding_right=5
+  icon.font="Hack Nerd Font:Bold:17.0"
+  label.font="Hack Nerd Font:Bold:14.0"
+  icon.color=0xffffffff
+  label.color=0xffffffff
+  icon.padding_left=4
+  icon.padding_right=4
+  label.padding_left=4
+  label.padding_right=4
+)
+sketchybar --default "${default[@]}"
+
+##### AeroSpace Workspace Indicators #####
+sketchybar --add event aerospace_workspace_change
+
+for sid in $(aerospace list-workspaces --all); do
+  sketchybar --add item space.$sid left \
+    --subscribe space.$sid aerospace_workspace_change \
+    --set space.$sid \
+      background.color=0x33ffffff \
+      background.corner_radius=5 \
+      background.height=20 \
+      background.drawing=on \
+      icon.drawing=off \
+      label="$sid" \
+      label.padding_left=8 \
+      label.padding_right=8 \
+      click_script="aerospace workspace $sid" \
+      script="$CONFIG_DIR/plugins/aerospace.sh $sid"
+done
+
+##### Separador + ícones dos apps do workspace ativo #####
+sketchybar --add item separator left \
+           --set separator \
+             icon="|" \
+             icon.color=0x44ffffff \
+             icon.padding_left=6 \
+             icon.padding_right=6 \
+             label.drawing=off \
+             background.drawing=off
+
+sketchybar --add item workspace_apps left \
+  --subscribe workspace_apps aerospace_workspace_change front_app_switched \
+  --set workspace_apps \
+    icon.drawing=off \
+    label.font="Hack Nerd Font:Bold:16.0" \
+    script="$PLUGIN_DIR/workspace_apps.sh"
+
+##### Right Items #####
+sketchybar --add item clock right \
+           --set clock update_freq=10 icon=  script="$PLUGIN_DIR/clock.sh" \
+           --add item volume right \
+           --set volume script="$PLUGIN_DIR/volume.sh" \
+           --subscribe volume volume_change \
+           --add item battery right \
+           --set battery update_freq=120 script="$PLUGIN_DIR/battery.sh" \
+           --subscribe battery system_woke power_source_change
+
+##### Force all scripts to run the first time #####
+sketchybar --update

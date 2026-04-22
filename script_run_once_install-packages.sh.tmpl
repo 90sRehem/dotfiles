@@ -1,3 +1,4 @@
+{{- if eq .chezmoi.os "linux" -}}
 #!/bin/bash
 
 # Script de instalação automática de pacotes para Arch Linux
@@ -211,3 +212,4 @@ echo "  3. Configurar SSH keys para GitHub"
 echo "  4. Personalizar configurações do Neovim"
 echo "  5. Configurar Bitwarden e fazer login"
 echo "  6. Instalar runtimes com mise: mise install node@latest python@latest"
+{{- end }}
