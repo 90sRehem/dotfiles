@@ -1,161 +1,58 @@
-# Global Guidelines
+# Agent Guidelines
 
-Principles to reduce common LLM coding mistakes while maintaining simplicity, precision, and execution discipline.
+Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistakes while maintaining simplicity, precision, and execution discipline.
 
-**Tradeoff:** These rules favor correctness and clarity over speed. Use judgment for trivial tasks.
-
----
-
-## 1. Think Before Coding
-
-**Don’t assume. Don’t hide uncertainty. Make reasoning explicit.**
-
-Before implementing:
-
-- State assumptions clearly
-- If multiple interpretations exist, present options (don’t choose silently)
-- Call out simpler approaches when they exist
-- If something is unclear, stop and ask
+**Core Tradeoff:** These rules favor correctness and clarity over speed. Use judgment for trivial tasks.
 
 ---
 
-## 2. Simplicity First
+## 10 Essential Principles
 
-**Solve the problem with the minimum necessary code.**
-
-- No features beyond what was requested
-- No abstractions for single-use code
-- No speculative flexibility or configurability
-- No handling of impossible scenarios
-- If 200 lines can be 50 → rewrite
-
-Key question: *Is this more complex than necessary?*
-
----
-
-## 3. Surgical Changes
-
-**Change only what is required.**
-
-When editing existing code:
-
-- Don’t “improve” adjacent code
-- Don’t refactor unnecessarily
-- Match the existing style
-- Call out unrelated issues, but don’t fix them
-
-Cleanup rules:
-
-- Remove only what YOUR changes made obsolete
-- Do not remove pre-existing dead code unless asked
-
-Litmus test: *Every changed line must trace directly to the request.*
+1. **Think Before Coding** — State assumptions, present options, call out simpler approaches
+2. **Simplicity First** — Solve with minimum code; no unnecessary abstractions or features
+3. **Surgical Changes** — Change only what's required; don't "improve" adjacent code
+4. **Goal-Driven Execution** — Work with verifiable success criteria; write tests before fixes
+5. **Research → Plan → Implement** — Default workflow for non-trivial tasks
+6. **Context Discipline** — Load on demand; use `file:line` references; avoid pollution
+7. **Mandatory Subagent Delegation** — Delegate exploration, broad analysis, multi-file searching
+8. **Execution Principles** — Execute before describing; verify results; fail transparently
+9. **Clean Output Discipline** — Avoid verbosity; prefer clarity; stay focused
+10. **Success Signals** — Fewer diffs, less overengineering, more clarification, simpler code
 
 ---
 
-## 4. Goal-Driven Execution
+## Quick Reference
 
-**Work with verifiable success criteria.**
-
-Turn tasks into testable goals:
-
-- “Fix bug” → write failing test → make it pass
-- “Add validation” → write invalid-input tests → validate
-- “Refactor” → ensure tests pass before and after
-
-For multi-step work:
-
-1. [Step] → verify: [criteria]
-2. [Step] → verify: [criteria]
-3. [Step] → verify: [criteria]
-
----
-
-## 5. Workflow: Research → Plan → Implement
-
-**Default flow for non-trivial tasks:**
-
-1. **Research**
-   - Delegate to subagent to map relevant context
-2. **Plan**
-   - Present a clear, concise plan
-   - Wait for user approval
-3. **Implement**
-   - Execute incrementally
-   - Track progress
-   - Validate each step
-
-⚡ Trivial tasks may skip directly to implementation.
+| Principle | Key Rule |
+|-----------|----------|
+| Think Before | Don't assume; make reasoning explicit |
+| Simplicity | If 200 lines can be 50 → rewrite |
+| Surgical | Every changed line must trace to request |
+| Goal-Driven | "Fix bug" → test failure → make pass |
+| Workflow | Research → Plan → Implement |
+| Context | Prefer `file:line` over full files |
+| Delegation | Delegate exploration, analysis, grep |
+| Execution | Execute before describing |
+| Output | Avoid unnecessary verbosity |
+| Success | Measure by fewer diffs, simpler code |
 
 ---
 
-## 6. Context Discipline
+## When to Delegate
 
-**Manage context efficiently.**
-
-- Load context on demand
-- Prefer `file:line` references over pasted code
-- Avoid context pollution
-- Compact after completing phases
-
----
-
-## 7. Mandatory Subagent Delegation
-
-**Use subagents whenever the task involves exploration or broad analysis.**
-
-Delegate when:
-
-- Searching the codebase (grep, glob, multiple files)
+**Always delegate:**
+- Searching codebase (grep, glob, multiple files)
 - Understanding modules or flows
 - Analyzing 3+ files
-- Answering:
-  - “Where is X?”
-  - “How does X work?”
-  - “What calls X?”
+- Answering: "Where is X?", "How does X work?", "What calls X?"
 - Reviewing large diffs
 - Running exploratory commands
 
-How to delegate:
-
-- Use `explore` → code navigation
-- Use `general` → broader research
-- Request **compressed summaries with `file:line`**
-- Never request full file dumps
-- Run subagents in parallel when possible
-
-Do NOT delegate when:
-
+**Never delegate:**
 - Editing a single file
 - Running known build/test/lint commands
-- Performing a simple, targeted operation
+- Simple, targeted operations
 
 ---
 
-## 8. Execution Principles
-
-- Execute before describing
-- Verify results before claiming success
-- Fail transparently (don’t hide errors)
-- Suggest alternatives when needed
-
----
-
-## 9. Clean Output Discipline
-
-- Avoid unnecessary verbosity
-- Prefer clarity over volume
-- Don’t repeat code without reason
-- Stay focused on the objective
-
----
-
-## 10. Success Signals
-
-These guidelines are working if:
-
-- Fewer unnecessary diffs
-- Less overengineering
-- More clarification before implementation
-- Simpler, more direct code
-- Effective use of subagents
+For detailed guidelines and examples, [→ see docs/coding-guidelines.md](docs/coding-guidelines.md)
