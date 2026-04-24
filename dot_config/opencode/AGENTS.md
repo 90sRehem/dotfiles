@@ -23,24 +23,25 @@ Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistak
 
 ## Quick Reference
 
-| Principle | Key Rule |
-|-----------|----------|
-| Think Before | Don't assume; make reasoning explicit |
-| Simplicity | If 200 lines can be 50 → rewrite |
-| Surgical | Every changed line must trace to request |
-| Goal-Driven | "Fix bug" → test failure → make pass |
-| Workflow | Research → Plan → Implement |
-| Context | Prefer `file:line` over full files |
-| Delegation | Delegate exploration, analysis, grep |
-| Execution | Execute before describing |
-| Output | Avoid unnecessary verbosity |
-| Success | Measure by fewer diffs, simpler code |
+| Principle    | Key Rule                                 |
+| ------------ | ---------------------------------------- |
+| Think Before | Don't assume; make reasoning explicit    |
+| Simplicity   | If 200 lines can be 50 → rewrite         |
+| Surgical     | Every changed line must trace to request |
+| Goal-Driven  | "Fix bug" → test failure → make pass     |
+| Workflow     | Research → Plan → Implement              |
+| Context      | Prefer `file:line` over full files       |
+| Delegation   | Delegate exploration, analysis, grep     |
+| Execution    | Execute before describing                |
+| Output       | Avoid unnecessary verbosity              |
+| Success      | Measure by fewer diffs, simpler code     |
 
 ---
 
 ## When to Delegate
 
 **Always delegate:**
+
 - Searching codebase (grep, glob, multiple files)
 - Understanding modules or flows
 - Analyzing 3+ files
@@ -49,8 +50,10 @@ Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistak
 - Running exploratory commands
 
 **Never delegate:**
-- Editing a single file
-- Running known build/test/lint commands
+
+<!-- - Editing a single file -->
+<!-- - Running known build/test/lint commands -->
+
 - Simple, targeted operations
 
 ---
