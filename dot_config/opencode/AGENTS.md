@@ -18,6 +18,7 @@ Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistak
 8. **Execution Principles** — Execute before describing; verify results; fail transparently
 9. **Clean Output Discipline** — Avoid verbosity; prefer clarity; stay focused
 10. **Success Signals** — Fewer diffs, less overengineering, more clarification, simpler code
+11. **Knowledge Capture** — After significant sessions (feature complete, architectural decision, lesson discovered), write a log to the projets-wiki vault. Structure: what, why, lessons, pending.
 
 ---
 
@@ -35,6 +36,7 @@ Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistak
 | Execution    | Execute before describing                |
 | Output       | Avoid unnecessary verbosity              |
 | Success      | Measure by fewer diffs, simpler code     |
+| Knowledge    | Significant work → log to projets-wiki vault         |
 
 ---
 
@@ -59,3 +61,23 @@ Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistak
 ---
 
 For detailed guidelines and examples, [→ see docs/coding-guidelines.md](docs/coding-guidelines.md)
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
+
+## projets-wiki
+
+Vault de memória persistente em `~/Documents/dev/projets-wiki/`.
+
+Rules:
+- After completing significant work (feature, fix, architectural decision), write a session log to `~/Documents/dev/projets-wiki/<project>/logs/YYYY-MM-DD-<slug>.md`
+- Log format: what was done, decisions made, lessons learned, pending items
+- Decisions with long-term impact → also record in `~/Documents/dev/projets-wiki/<project>/architecture/decisions.md`
+- Lessons about agent behavior, tooling, or workflow → record in `~/Documents/dev/projets-wiki/opencode/logs/`
+- Do NOT write logs for trivial tasks (single-line fixes, config tweaks)

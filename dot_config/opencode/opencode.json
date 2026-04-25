@@ -1,37 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "autoupdate": false,
-  "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "enabled": true,
-      "headers": {
-        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
-      }
-    },
-    "memory": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
-      "enabled": true
-    },
-    "sequential-thinking": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "enabled": true
-    }
-  },
   "plugin": [
     "opencode-claude-auth",
-    "opencode-snip",
+    // "opencode-snip",
     "opencode-otel",
     "opencode-mem",
     "opencode-handoff",
