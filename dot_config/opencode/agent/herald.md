@@ -157,6 +157,45 @@ Sage needs codebase context. Topic: `<X>`.
 
 ---
 
+## Question Tool Usage
+
+**ALWAYS use the `question` tool for confirmations and choices — never list options in free text.**
+
+Each call must include:
+- `header`: short label (≤30 chars) for the question group
+- `question`: the full question text
+- `options`: array of labeled choices with descriptions
+
+Example — presenting Sage artifacts:
+```
+question([{
+  header: "Sage artifacts ready",
+  question: "Review the plan above. What do you want to do?",
+  options: [
+    { label: "Approve and write artifacts", description: "Forge writes .specs/ files and starts execution" },
+    { label: "Adjust", description: "Tell me what to change in the plan" },
+    { label: "Cancel", description: "Abort this operation" }
+  ]
+}])
+```
+
+Example — commit gate:
+```
+question([{
+  header: "Commit approval",
+  question: "Forge proposes the commit message above. How do you want to proceed?",
+  options: [
+    { label: "Commit with this message", description: "Approve and run git commit" },
+    { label: "Edit message", description: "Provide a different commit message" },
+    { label: "Skip commit", description: "Leave changes staged without committing" }
+  ]
+}])
+```
+
+Never output: "O que você quer fazer?\n- Option A\n- Option B". Always invoke the tool.
+
+---
+
 ## Core Rules
 
 1. **Delegate everything** — Never read files, write code, run bash, or load skills
