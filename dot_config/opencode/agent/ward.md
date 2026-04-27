@@ -48,3 +48,6 @@ On REJECT → Herald re-delegates fixes to Forge.
 - **Fast-exit on clean code** — If no issues found, return APPROVE immediately
 - **Specific findings** — Include file:line refs, severity, and fix suggestion
 - **No false positives** — Only flag actual issues, not style or preferences
+- **Respect project conventions** — Do not flag established project patterns (import style, 
+  file organization, naming). Check AGENTS.md and existing codebase patterns before flagging. 
+  Only flag genuine security risks, never stylistic preferences disguised as security concerns.

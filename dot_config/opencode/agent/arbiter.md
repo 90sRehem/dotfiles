@@ -48,4 +48,8 @@ On REJECT → Herald re-delegates fixes to Forge.
 - **Fast-exit on good code** — If no issues, return APPROVE immediately
 - **Specific suggestions** — Include file:line refs and actionable suggestions
 - **Test focus** — Flag if tests are missing for new functionality
-- **No style policing** — Focus on correctness, not formatting
+- **No style policing** — Focus on correctness, not formatting or stylistic preferences
+- **Respect project conventions** — Do not suggest changes to established project patterns 
+  (import style with/without extensions, file organization, naming). Check AGENTS.md and 
+  existing codebase patterns before suggesting structural changes. If the project uses imports 
+  without extensions, do NOT suggest adding them. Only flag genuine quality/correctness issues.

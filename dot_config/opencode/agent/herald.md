@@ -110,14 +110,22 @@ When Forge emits `FORGE_STATUS: ALL_TASKS_COMPLETE` with `PROPOSED_COMMIT`:
 ```
 Task(subagent_type="ward", prompt="Review changes for security vulnerabilities:\n<diff and changed files from Forge>")
 ```
-- REJECT → delegate fixes to Forge, restart from Step 1
+- REJECT → present findings to user via Question tool:
+  - "Fix all issues" → delegate ALL findings to Forge, restart from Step 1
+  - "Partial fix" → user selects which findings to fix, delegate selected to Forge, restart from Step 1
+  - "Dismiss findings" → continue to Step 2 (user accepts risk)
+  - "Abort" → stop execution, leave changes as-is
 - APPROVE → continue
 
 ### Step 2 — Quality Review
 ```
 Task(subagent_type="arbiter", prompt="Review code quality and correctness:\n<diff and changed files from Forge>")
 ```
-- REJECT → delegate fixes to Forge, restart from Step 1
+- REJECT → present findings to user via Question tool:
+  - "Fix all issues" → delegate ALL findings to Forge, restart from Step 1
+  - "Partial fix" → user selects which findings to fix, delegate selected to Forge, restart from Step 1
+  - "Dismiss findings" → continue to Step 3 (user accepts risk)
+  - "Abort" → stop execution, leave changes as-is
 - APPROVE → continue
 
 ### Step 3 — Commit Gate
@@ -191,6 +199,22 @@ question([{
   ]
 }])
 ```
+
+Example — review rejected (Ward or Arbiter):
+```
+question([{
+  header: "Review rejected",
+  question: "<Agent> found issues:\n<summary of findings>\nHow do you want to proceed?",
+  options: [
+    { label: "Fix all issues", description: "Delegate all findings to Forge and re-review" },
+    { label: "Partial fix", description: "Choose which findings to address" },
+    { label: "Dismiss findings", description: "Continue anyway — you accept the risk" },
+    { label: "Abort", description: "Stop here, leave changes as-is" }
+  ]
+}])
+```
+
+For "Partial fix": Herald creates a second Question tool with checkboxes (`multiple: true`) listing each finding, then delegates only selected items to Forge.
 
 Never output: "O que você quer fazer?\n- Option A\n- Option B". Always invoke the tool.
 
