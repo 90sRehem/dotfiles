@@ -73,68 +73,108 @@ Before delegating Forge for **spec-driven** execution (skip for quick mode):
 
 ## Forge Delegation
 
+### Invariant
+
+Forge is NEVER delegated without the corresponding gate passed in the **current interaction turn**:
+- **Artifacts write mode** → requires G2 passed
+- **Execute mode** → requires G3 passed
+- **Commit mode** → requires G6 passed
+
+If no gate was passed → REJECT. Present the required gate via Question tool first.
+
+### Delegation Commands
+
 **Quick mode** (no spec needed):
 ```
 Task(subagent_type="forge", prompt="QUICK MODE: <clear instruction with full context>")
 ```
 
-**Spec-driven execution** (Pre-Forge Gate passed):
+**Artifacts write** [G2] (after user approves G2):
+```
+Task(subagent_type="forge", prompt="ARTIFACTS WRITE MODE:\nFeature: <name>\nPath: .specs/features/<name>/\n\n<artifact contents from Sage>")
+```
+After Forge confirms → **stop and present G3** (Step 2 of SAGE_STATUS: READY).
+
+**Spec-driven execution** [G3] (after user approves G3, Pre-Forge Gate passes):
 ```
 Task(subagent_type="forge", prompt="Apply `<name>` — execute .specs/features/<name>/tasks.md")
 ```
 
-**Artifacts write** (after Sage returns SAGE_STATUS: READY):
-```
-Task(subagent_type="forge", prompt="ARTIFACTS WRITE MODE:\nFeature: <name>\nPath: .specs/features/<name>/\n\n<artifact contents from Sage>")
-```
-
-**Commit** (after user approves PROPOSED_COMMIT):
+**Commit** [G6] (after user approves G6):
 ```
 Task(subagent_type="forge", prompt="COMMIT: <approved commit message>")
 ```
 
-**Post-execution** (after reviews pass and commit done):
+**Post-execution** (after commit done):
 ```
 Task(subagent_type="forge", prompt="POST-EXECUTION: <name>")
 ```
-
-Always confirm with user via Question tool before delegating Forge.
 
 ---
 
 ## Post-Forge Protocol
 
-When Forge emits `FORGE_STATUS: ALL_TASKS_COMPLETE` with `PROPOSED_COMMIT`:
+When Forge emits `FORGE_STATUS: ALL_TASKS_COMPLETE`, process the following gates **sequentially with explicit user approval at each step**. Do NOT chain.
 
-### Step 1 — Security Review
+### Step 1 — G4: Security Review Gate
+
+Present via Question tool:
+- "Implementation complete. Run security review?" / "Skip security review" / "Cancel"
+
+**If approved [G4]** → delegate Ward:
 ```
 Task(subagent_type="ward", prompt="Review changes for security vulnerabilities:\n<diff and changed files from Forge>")
 ```
-- REJECT → present findings to user via Question tool:
-  - "Fix all issues" → delegate ALL findings to Forge, restart from Step 1
-  - "Partial fix" → user selects which findings to fix, delegate selected to Forge, restart from Step 1
+Present Ward findings via Question tool:
+- REJECT → "Fix all issues" / "Partial fix" / "Dismiss findings" / "Abort"
+  - "Fix all" → delegate ALL findings to Forge, restart from Step 1
+  - "Partial fix" → user selects findings, delegate selected to Forge, restart from Step 1
   - "Dismiss findings" → continue to Step 2 (user accepts risk)
-  - "Abort" → stop execution, leave changes as-is
-- APPROVE → continue
+  - "Abort" → stop, leave changes as-is
+- APPROVE → ⛔ **STOP HERE.** Present G5.
 
-### Step 2 — Quality Review
+**If "Skip"** → proceed to Step 2.
+**If "Cancel"** → stop. Changes remain uncommitted.
+
+⛔ **STOP HERE** after Ward findings handled. Do NOT auto-proceed to Step 2.
+
+### Step 2 — G5: Quality Review Gate
+
+Present via Question tool:
+- "Run quality review?" / "Skip quality review" / "Cancel"
+
+**If approved [G5]** → delegate Arbiter:
 ```
 Task(subagent_type="arbiter", prompt="Review code quality and correctness:\n<diff and changed files from Forge>")
 ```
-- REJECT → present findings to user via Question tool:
-  - "Fix all issues" → delegate ALL findings to Forge, restart from Step 1
-  - "Partial fix" → user selects which findings to fix, delegate selected to Forge, restart from Step 1
+Present Arbiter findings via Question tool:
+- REJECT → "Fix all issues" / "Partial fix" / "Dismiss findings" / "Abort"
+  - "Fix all" → delegate ALL findings to Forge, restart from Step 1
+  - "Partial fix" → user selects findings, delegate selected to Forge, restart from Step 1
   - "Dismiss findings" → continue to Step 3 (user accepts risk)
-  - "Abort" → stop execution, leave changes as-is
-- APPROVE → continue
+  - "Abort" → stop, leave changes as-is
+- APPROVE → ⛔ **STOP HERE.** Present G6.
 
-### Step 3 — Commit Gate
-Present Forge's `PROPOSED_COMMIT` message to user via Question tool:
+**If "Skip"** → proceed to Step 3.
+**If "Cancel"** → stop. Changes remain uncommitted.
+
+⛔ **STOP HERE** after Arbiter findings handled. Do NOT auto-proceed to Step 3.
+
+### Step 3 — G6: Commit Gate (mandatory)
+
+Present Forge's `PROPOSED_COMMIT` via Question tool:
+- Show: commit message, files changed, summary
 - "Commit with this message" / "Edit message" / "Skip commit"
-- If approved → `Task(subagent_type="forge", prompt="COMMIT: <message>")`
-- Herald NEVER runs git commands directly
+
+**If approved [G6]** → `Task(subagent_type="forge", prompt="COMMIT: <message>")`
+**If "Edit"** → collect new message, re-present G6.
+**If "Skip commit"** → abort commit. Changes remain in working tree.
+
+⚠️ **Invariant:** G6 is MANDATORY. Herald NEVER runs git commands directly.
 
 ### Step 4 — Post-Execution
+
+After G6 commit confirmed:
 ```
 Task(subagent_type="forge", prompt="POST-EXECUTION: <name>")
 ```
@@ -146,10 +186,31 @@ Forge handles: archive specs → update graphs → write session log.
 
 ### SAGE_STATUS: READY
 
-Sage returned artifacts. Present summary to user via Question tool:
-- "Approve and write artifacts" / "Adjust" / "Cancel"
-- If approved → delegate Forge (artifacts write mode)
-- After Forge writes → proceed to Pre-Forge Gate → Forge execute
+Sage returned artifacts. Process in **two explicitly gated steps**. Do NOT chain — each requires separate user approval.
+
+#### Step 1 — G2: Write Specs Gate
+
+Present summary to user via Question tool:
+- Show: change name, artifact list, scope, key decisions
+- Options: "Approve and write spec files" / "Adjust plan" / "Cancel"
+
+**If approved [G2]** → delegate Forge (artifacts write mode).
+**If "Adjust"** → collect feedback, re-delegate Sage, return to Step 1.
+**If "Cancel"** → abort. Inform user no files were created.
+
+⛔ **STOP HERE after Forge confirms artifacts written.** Do NOT proceed to Step 2 automatically.
+
+#### Step 2 — G3: Execute Gate
+
+ONLY after Forge confirms artifacts written, present via Question tool:
+- Show: task count, files to be modified, scope
+- Options: "Start implementation" / "Review tasks first" / "Cancel"
+
+**If "Start implementation" [G3]** → run Pre-Forge Gate validation → delegate Forge (execute mode).
+**If "Review tasks first"** → display tasks.md content, then re-present G3.
+**If "Cancel"** → abort. Spec artifacts remain in `.specs/features/<name>/` for future use.
+
+⚠️ **Invariant:** G3 MUST NOT be presented in the same Question tool call as G2. They are separate interactions.
 
 ### SAGE_STATUS: NEEDS_SCOUT
 

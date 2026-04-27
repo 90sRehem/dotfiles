@@ -1,83 +1,54 @@
 # Agent Guidelines
 
-Principles for Forge, Herald, Scout, and Ward agents to reduce common LLM mistakes while maintaining simplicity, precision, and execution discipline.
+Multi-agent system: Herald (coordinator), Scout (explorer), Sage (planner), Forge (executor), Ward (security), Arbiter (quality).
 
-**Core Tradeoff:** These rules favor correctness and clarity over speed. Use judgment for trivial tasks.
-
----
-
-## 10 Essential Principles
-
-1. **Think Before Coding** — State assumptions, present options, call out simpler approaches
-2. **Simplicity First** — Solve with minimum code; no unnecessary abstractions or features
-3. **Surgical Changes** — Change only what's required; don't "improve" adjacent code
-4. **Goal-Driven Execution** — Work with verifiable success criteria; write tests before fixes
-5. **Research → Plan → Implement** — Default workflow for non-trivial tasks
-6. **Context Discipline** — Load on demand; use `file:line` references; avoid pollution
-7. **Mandatory Subagent Delegation** — Delegate exploration, broad analysis, multi-file searching
-8. **Execution Principles** — Execute before describing; verify results; fail transparently
-9. **Clean Output Discipline** — Avoid verbosity; prefer clarity; stay focused
-10. **Success Signals** — Fewer diffs, less overengineering, more clarification, simpler code
-11. **Knowledge Capture** — After significant sessions (feature complete, architectural decision, lesson discovered), write a log to the projets-wiki vault. Structure: what, why, lessons, pending.
+**Core tradeoff:** Correctness and clarity over speed. Use judgment for trivial tasks.
 
 ---
 
-## Quick Reference
+## Principles
 
-| Principle    | Key Rule                                 |
-| ------------ | ---------------------------------------- |
-| Think Before | Don't assume; make reasoning explicit    |
-| Simplicity   | If 200 lines can be 50 → rewrite         |
-| Surgical     | Every changed line must trace to request |
-| Goal-Driven  | "Fix bug" → test failure → make pass     |
-| Workflow     | Research → Plan → Implement              |
-| Context      | Prefer `file:line` over full files       |
-| Delegation   | Delegate exploration, analysis, grep     |
-| Execution    | Execute before describing                |
-| Output       | Avoid unnecessary verbosity              |
-| Success      | Measure by fewer diffs, simpler code     |
-| Knowledge    | Significant work → log to projets-wiki vault         |
-
----
-
-## When to Delegate
-
-**Always delegate:**
-
-- Searching codebase (grep, glob, multiple files)
-- Understanding modules or flows
-- Analyzing 3+ files
-- Answering: "Where is X?", "How does X work?", "What calls X?"
-- Reviewing large diffs
-- Running exploratory commands
-
-**Never delegate:**
-
-<!-- - Editing a single file -->
-<!-- - Running known build/test/lint commands -->
-
-- Simple, targeted operations
+| Principle | Rule |
+|-----------|------|
+| Think Before | Don't assume; make reasoning explicit |
+| Simplicity | If 200 lines can be 50 → rewrite |
+| Surgical | Every changed line must trace to request |
+| Goal-Driven | "Fix bug" → test failure → make pass |
+| Workflow | Research → Plan → Implement |
+| Context | Prefer `file:line` over full files |
+| Delegation | Delegate exploration, analysis, grep |
+| Execution | Execute before describing |
+| Output | Avoid unnecessary verbosity |
+| Knowledge | Significant work → log to projets-wiki vault |
 
 ---
 
-For detailed guidelines and examples, [→ see docs/coding-guidelines.md](docs/coding-guidelines.md)
+## Delegation
 
-## graphify
+**Always delegate:** codebase search, module analysis, 3+ files, "Where is X?", large diffs, exploratory commands.
 
-This project has a graphify knowledge graph at graphify-out/.
+**Never delegate:** single-file edits, targeted known commands.
 
-Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- After modifying code files in this session, run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"` to keep the graph current
+---
 
-## projets-wiki
+## Integrations
 
-Vault de memória persistente em `~/Documents/dev/projets-wiki/`.
+**graphify** — knowledge graph at `graphify-out/`
+- Before architecture questions: read `graphify-out/GRAPH_REPORT.md`
+- If `graphify-out/wiki/index.md` exists, navigate it instead of raw files
+- After modifying code: run `python3 -c "from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))"`
 
-Rules:
-- After completing significant work (feature, fix, architectural decision), write a session log to `~/Documents/dev/projets-wiki/<project>/logs/YYYY-MM-DD-<slug>.md`
-- Log format: what was done, decisions made, lessons learned, pending items
-- Decisions with long-term impact → also record in `~/Documents/dev/projets-wiki/<project>/architecture/decisions.md`
-- Lessons about agent behavior, tooling, or workflow → record in `~/Documents/dev/projets-wiki/opencode/logs/`
-- Do NOT write logs for trivial tasks (single-line fixes, config tweaks)
+**projets-wiki** — persistent memory vault at `~/Documents/dev/projets-wiki/`
+- After significant work: log to `<project>/logs/YYYY-MM-DD-<slug>.md`
+- Long-term decisions: `<project>/architecture/decisions.md`
+- Agent/tooling lessons: `opencode/logs/`
+- Skip logs for trivial tasks
+
+---
+
+## Detailed Instructions
+
+- [JSON Inter-Agent Protocol](.agents/protocol.md) — schemas, progressive disclosure
+- [Approval Gate System](.agents/gates.md) — G1-G6, Question tool enforcement
+- [Herald](.agents/herald.md) — routing, quick flow, commit flow
+- [Agent Definitions](.agents/agents.md) — Scout, Sage, Forge, Ward, Arbiter
