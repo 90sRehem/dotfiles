@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opencode.local/agents.config.schema.json",
+  "title": "Agent Configuration Pipeline",
+  "description": "JSON Schema for agents.config.jsonc — validates the 6-phase configuration pipeline",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE autocompletion support"
+    },
+    "providers": {
+      "type": "object",
+      "description": "Phase 1: Provider Detect — declare which model backend(s) agents use",
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Default provider for all agents",
+          "default": "anthropic"
+        },
+        "overrides": {
+          "type": "object",
+          "description": "Per-agent provider overrides",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "description": "Phase 2: Agent Override / Merge / Remap — configure agent identity",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Human-readable display name for the agent"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["primary", "subagent"],
+            "description": "Mode: 'primary' uses UI model selection; 'subagent' uses pinned model"
+          },
+          "model": {
+            "type": ["string", "null"],
+            "description": "Model identifier for subagent mode; null for primary mode"
+          },
+          "description": {
+            "type": "string",
+            "description": "One-line description of the agent's role"
+          }
+        },
+        "required": ["displayName", "mode", "model", "description"]
+      }
+    },
+    "toolFilters": {
+      "type": "object",
+      "description": "Phase 3: Tool Filter — declare which tools each agent can use",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "allow": {
+            "type": "array",
+            "description": "Tools agent is allowed to use (supports wildcards: mcp_*, *_session, etc.)",
+            "items": {
+              "type": "string"
+            }
+          },
+          "deny": {
+            "type": "array",
+            "description": "Tools agent is NOT allowed to use (deny takes precedence over allow)",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "mcpServers": {
+      "type": "object",
+      "description": "Phase 4: MCP Load — declare which MCP servers agents connect to",
+      "properties": {
+        "default": {
+          "type": "array",
+          "description": "Default MCP servers for all agents",
+          "items": {
+            "type": "string"
+          }
+        },
+        "overrides": {
+          "type": "object",
+          "description": "Per-agent MCP server overrides",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "Phase 5: Command Inject — declare slash commands available per agent",
+      "additionalProperties": {
+        "type": "array",
+        "description": "Slash commands available to this agent",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "description": "Phase 6: Skill Compose — declare which skills each agent loads",
+      "additionalProperties": {
+        "type": "array",
+        "description": "Skills loaded by this agent",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

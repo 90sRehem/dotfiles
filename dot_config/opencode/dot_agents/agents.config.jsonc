@@ -1,0 +1,313 @@
+// agents.config.jsonc
+// JSON Configuration for the Multi-Agent System
+// Validates against: .agents/agents.config.schema.json
+// Documentation: .agents/config-pipeline.md
+//
+// This file defines the 6-phase configuration pipeline:
+// 1. Provider Detect   → which model backend
+// 2. Agent Override    → agent identity & mode
+// 3. Tool Filter       → tool access control
+// 4. MCP Load          → MCP server connections
+// 5. Command Inject    → slash command routing
+// 6. Skill Compose     → skill initialization
+//
+// NOTE: This file is optional. Without it, the system uses sensible defaults (zero-config).
+
+{
+  "$schema": "agents.config.schema.json",
+  // Optional: point to the schema for IDE autocompletion
+  // PHASE 1: Provider Detect
+  // Declare which model backend(s) the system uses.
+  // Default: "anthropic"
+  // 
+  // For now, we only use Anthropic. In future, this can support multiple backends.
+  "providers": {
+    "default": "anthropic",
+    "overrides": {
+      "herald": "anthropic",
+      "scout": "anthropic",
+      "sage": "anthropic",
+      "forge": "anthropic",
+      "ward": "anthropic",
+      "arbiter": "anthropic"
+    }
+  },
+
+  // PHASE 2: Agent Override / Merge / Remap
+  // Configure each agent's identity, mode, model, and description.
+  //
+  // Mode semantics:
+  //   - "primary":   agent uses model selected in user's UI
+  //   - "subagent":  agent uses pinned model (ignores UI)
+  //
+  // Model rationale:
+  //   - Herald:  null (primary mode, defers to UI)
+  //   - Scout:   haiku-4 (fast, exploratory tasks)
+  //   - Sage:    opus-4 (complex reasoning, planning)
+  //   - Forge:   sonnet-4 (code generation, balance of speed & quality)
+  //   - Ward:    haiku-4 (fast audit scans)
+  //   - Arbiter: sonnet-4 (detailed quality review)
+  "agents": {
+    "herald": {
+      "displayName": "Herald",
+      "mode": "primary",
+      "model": null,
+      "description": "Coordinator and router — respects user's UI model choice"
+    },
+    "scout": {
+      "displayName": "Scout",
+      "mode": "subagent",
+      "model": "claude-haiku-4",
+      "description": "Codebase explorer and analyzer — fast exploration"
+    },
+    "sage": {
+      "displayName": "Sage",
+      "mode": "subagent",
+      "model": "claude-opus-4",
+      "description": "Strategic planner and analyst — deep reasoning"
+    },
+    "forge": {
+      "displayName": "Forge",
+      "mode": "subagent",
+      "model": "claude-sonnet-4",
+      "description": "Code executor and implementer — balanced capability"
+    },
+    "ward": {
+      "displayName": "Ward",
+      "mode": "subagent",
+      "model": "claude-haiku-4",
+      "description": "Security and compliance auditor — fast scanning"
+    },
+    "arbiter": {
+      "displayName": "Arbiter",
+      "mode": "subagent",
+      "model": "claude-sonnet-4",
+      "description": "Quality gate and reviewer — thorough evaluation"
+    }
+  },
+
+  // PHASE 3: Tool Filter
+  // Declare which tools each agent is permitted to use.
+  //
+  // Semantics:
+  //   - "allow":  array of tool names/patterns agent CAN use
+  //   - "deny":   array of tool names/patterns agent CANNOT use
+  //   - Precedence: DENY overrides ALLOW
+  //   - Wildcards: mcp_* matches mcp_Read, mcp_Bash, etc.
+  //
+  // By default (absent toolFilters), all agents can use all tools.
+  //
+  // Constraints by role:
+  //   - Sage:   planning only, no code mutations
+  //   - Scout:  exploration only, no writes
+  //   - Ward:   audit only, minimal tools
+  //   - Forge:  can execute (all tools or whitelist)
+  //   - Arbiter: review only, minimal tools
+  "toolFilters": {
+    // Sage: planning & analysis only — no code execution or mutations
+    "sage": {
+      "allow": [
+        "mcp_Context7_resolve-library-id",
+        "mcp_Context7_query-docs",
+        "mcp_Webfetch",
+        "mcp_Skill",
+        "mcp_Read_session",
+        "mcp_Handoff_session",
+        "mcp_Tokenscope"
+      ],
+      "deny": [
+        "Bash",
+        "Write",
+        "Edit",
+        "MultiEdit",
+        "Glob",
+        "Grep",
+        "mcp_Read"
+      ]
+    },
+
+    // Scout: exploration & search only — no writes or mutations
+    "scout": {
+      "allow": [
+        "Bash",
+        "Glob",
+        "Grep",
+        "mcp_Read",
+        "mcp_Context7_resolve-library-id",
+        "mcp_Context7_query-docs",
+        "mcp_Webfetch",
+        "mcp_Skill",
+        "mcp_Read_session",
+        "mcp_Tokenscope"
+      ],
+      "deny": [
+        "Write",
+        "Edit",
+        "MultiEdit",
+        "mcp_Handoff_session"
+      ]
+    },
+
+    // Ward: security audit only — minimal, read-only tools
+    "ward": {
+      "allow": [
+        "mcp_Read",
+        "Glob",
+        "Grep",
+        "Bash",
+        "mcp_Context7_resolve-library-id",
+        "mcp_Context7_query-docs",
+        "mcp_Skill",
+        "mcp_Tokenscope"
+      ],
+      "deny": [
+        "Write",
+        "Edit",
+        "MultiEdit",
+        "mcp_Webfetch",
+        "mcp_Read_session",
+        "mcp_Handoff_session"
+      ]
+    },
+
+    // Arbiter: quality review only — minimal, read-only tools
+    "arbiter": {
+      "allow": [
+        "mcp_Read",
+        "Glob",
+        "Grep",
+        "Bash",
+        "mcp_Context7_resolve-library-id",
+        "mcp_Context7_query-docs",
+        "mcp_Skill",
+        "mcp_Tokenscope"
+      ],
+      "deny": [
+        "Write",
+        "Edit",
+        "MultiEdit",
+        "mcp_Webfetch",
+        "mcp_Read_session",
+        "mcp_Handoff_session"
+      ]
+    }
+  },
+
+  // PHASE 4: MCP Load
+  // Declare which MCP (Model Context Protocol) servers each agent connects to.
+  //
+  // MCP servers extend agent capabilities with additional tools, data sources, or integrations.
+  // Each server is identified by name (e.g., "context7", "webfetch", "skill", "tokenscope").
+  //
+  // Default: ["context7", "webfetch", "skill", "tokenscope"]
+  //
+  // Common servers:
+  //   - context7:     library documentation & code examples
+  //   - webfetch:     web content retrieval
+  //   - skill:        agent skill composition
+  //   - tokenscope:   token usage analytics
+  //   - handoff:      agent handoff sessions (Sage)
+  //   - read-session: session transcript reading (Sage)
+  "mcpServers": {
+    "default": [
+      "context7",
+      "webfetch",
+      "skill",
+      "tokenscope"
+    ],
+    "overrides": {
+      // Sage gets additional servers for handoff & session management
+      "sage": [
+        "context7",
+        "webfetch",
+        "skill",
+        "tokenscope",
+        "handoff",
+        "read-session"
+      ]
+    }
+  },
+
+  // PHASE 5: Command Inject
+  // Declare slash commands (user shortcuts) available per agent.
+  //
+  // Commands are user-facing shortcuts that route to specific agent behaviors.
+  // Examples: /plan (Sage), /implement (Forge), /audit (Ward), /review (Arbiter).
+  //
+  // By default (absent commands), all agents recognize all commands.
+  "commands": {
+    // Herald recognizes delegation commands to other agents
+    "herald": [
+      "/plan",
+      "/fix",
+      "/commit",
+      "/review",
+      "/scout",
+      "/sage",
+      "/forge",
+      "/ward",
+      "/arbiter"
+    ],
+
+    // Sage recognizes planning commands
+    "sage": [
+      "/spec",
+      "/design",
+      "/tasks",
+      "/plan"
+    ],
+
+    // Forge recognizes implementation commands
+    "forge": [
+      "/implement",
+      "/test",
+      "/refactor",
+      "/fix"
+    ],
+
+    // Ward recognizes security audit commands
+    "ward": [
+      "/audit",
+      "/scan",
+      "/review"
+    ],
+
+    // Arbiter recognizes quality review commands
+    "arbiter": [
+      "/review",
+      "/approve",
+      "/reject",
+      "/quality"
+    ]
+  },
+
+  // PHASE 6: Skill Compose
+  // Declare which skills (specialized capabilities or workflows) each agent loads.
+  //
+  // Skills are modules or behavior augmentations that enhance agent capabilities.
+  // Examples: "spec-driven" (planning methodology), "code-review" (analysis), etc.
+  //
+  // By default (absent skills), no skills are loaded.
+  "skills": {
+    // Sage uses spec-driven methodology for planning
+    "sage": [
+      "spec-driven"
+    ],
+
+    // Forge uses code review and test-driven development
+    "forge": [
+      "code-review",
+      "test-driven"
+    ],
+
+    // Ward performs security audits
+    "ward": [
+      "security-audit"
+    ],
+
+    // Arbiter enforces quality gates
+    "arbiter": [
+      "quality-gate"
+    ]
+  }
+}

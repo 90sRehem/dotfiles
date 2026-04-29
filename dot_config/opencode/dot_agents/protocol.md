@@ -4,6 +4,19 @@
 
 **Source of truth for inter-agent communication.** `agents.md` instructs agents to emit these envelopes; `herald.md` defines parsing logic.
 
+## Configuration Pipeline Integration
+
+Agent configuration is now formalized in the **6-phase configuration pipeline** (see [.agents/config-pipeline.md](.agents/config-pipeline.md)). The pipeline declares:
+
+- **Phase 1**: Which model backend each agent uses
+- **Phase 2**: Agent identity and mode (`primary` or `subagent`)
+- **Phase 3**: Tool access filters
+- **Phase 4**: MCP server connections
+- **Phase 5**: Slash command routing
+- **Phase 6**: Skill loading
+
+The pipeline is optional and zero-config — this protocol envelope does not change. Agent configuration is metadata declared in `.agents/agents.config.jsonc` (validated against `.agents/agents.config.schema.json`), not in the envelope structure itself.
+
 ## Universal Envelope
 
 All agents emit exactly this root structure:

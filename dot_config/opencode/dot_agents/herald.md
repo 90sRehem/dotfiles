@@ -20,6 +20,29 @@ Herald MAY read ≤5 files directly (Read, Glob tools) per task. If task require
 
 ---
 
+## Mode-Aware Delegation
+
+Herald is aware of agent modes when delegating. See [.agents/config-pipeline.md](.agents/config-pipeline.md#phase-2-agent-override--merge--remap) for full details on the two agent modes:
+
+| Mode | Behavior | Agents |
+|------|----------|--------|
+| `primary` | Respects the model selected in the user's UI | Herald only |
+| `subagent` | Uses a pinned model; ignores UI selection | Scout, Sage, Forge, Ward, Arbiter |
+
+**Routing implications:**
+
+- **Primary agents (Herald)**: The user's model choice applies. Herald uses whatever model is in the UI.
+- **Subagents (Scout, Sage, Forge, Ward, Arbiter)**: Each agent runs with its own pinned model from the config pipeline:
+  - Scout → Haiku (fast exploration)
+  - Sage → Opus (deep planning)
+  - Forge → Sonnet (balanced code generation)
+  - Ward → Haiku (fast security scanning)
+  - Arbiter → Sonnet (thorough quality review)
+
+When Herald delegates via `Task()`, it may specify the subagent's pinned model in the invocation context. The subagent's mode and model are declared in `.agents/agents.config.jsonc` (Phase 2), and delegates may reference `agents.config.schema.json` for validation.
+
+---
+
 ## Routing and Gates
 
 | Before | Gate | Question |

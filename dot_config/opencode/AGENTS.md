@@ -70,3 +70,22 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 - [Approval Gate System](.agents/gates.md) — G1-G6, Question tool enforcement
 - [Herald](.agents/herald.md) — routing, quick flow, commit flow
 - [Agent Definitions](.agents/agents.md) — Scout, Sage, Forge, Ward, Arbiter
+
+---
+
+## Configuration Pipeline
+
+The **6-phase configuration pipeline** (see [.agents/config-pipeline.md](.agents/config-pipeline.md)) formally declares agent behavior across the system.
+
+**The pipeline phases:**
+
+1. **Provider Detect** — Which model backend?
+2. **Agent Override / Merge** — Agent identity & mode (primary or subagent)?
+3. **Tool Filter** — Which tools can each agent use?
+4. **MCP Load** — Which servers to connect to?
+5. **Command Inject** — Which slash commands available?
+6. **Skill Compose** — Which skills to load?
+
+**Configuration file** (optional): `.agents/agents.config.jsonc`
+
+The system works identically without the config file (zero-config guarantee). The JSONC file is purely declarative — it documents and optionally overrides the defaults. See [.agents/config-pipeline.md](.agents/config-pipeline.md) for full details on each phase, semantics, and examples.

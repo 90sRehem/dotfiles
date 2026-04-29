@@ -2,9 +2,37 @@
 
 ---
 
+## Herald
+
+**Mode**: `primary` | **Model**: (respects UI selection) | [See configuration pipeline](config-pipeline.md#phase-2-agent-override--merge--remap)
+
+Central coordinator orchestrating all agents, applying approval gates, interpreting agent outputs, and managing user interactions. See [herald.md](herald.md) for full responsibilities and routing logic.
+
+> 📌 **Agent Mode**: Herald runs as a primary agent, meaning it respects the model selected in the user's UI. This allows users to choose whether Herald uses Haiku, Sonnet, or Opus depending on conversation depth. See [config-pipeline.md](config-pipeline.md) for details on primary vs. subagent modes.
+
+### Model Recommendations
+
+Since Herald is a primary agent, the user selects its model via the UI. No pinned model is necessary. However, for guidance:
+
+- **For quick interactions**: Use Claude Haiku (fastest, cheapest)
+- **For balanced work**: Use Claude Sonnet (good speed/quality tradeoff)
+- **For deep planning**: Use Claude Opus (best reasoning, slowest)
+
+---
+
 ## Scout
 
+**Mode**: `subagent` | **Model**: `claude-haiku-4` | [See configuration pipeline](config-pipeline.md#phase-2-agent-override--merge--remap)
+
 Deep exploration, pattern analysis, broad codebase searches. Operates only when delegated by Herald or Sage.
+
+> 📌 **Agent Mode**: Scout runs as a subagent with a pinned model (Haiku). It does not respect the user's UI model choice. See [config-pipeline.md](config-pipeline.md) for details on primary vs. subagent modes.
+
+### Model Recommendations
+
+**Recommended Model**: `claude-haiku-4` (pinned)
+
+**Rationale**: Scout performs exploratory tasks — searching files, analyzing patterns, identifying boundaries. These tasks benefit from speed over depth. Haiku is the fastest and cheapest model, making it ideal for iterative exploration. The agent rarely needs the reasoning depth of larger models. Exploration tasks are embarrassingly parallel and benefit from fast iteration.
 
 > ⚠️ **Output rule**: Final response MUST be a JSON envelope. Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
@@ -43,7 +71,17 @@ Herald interprets and presents human-readable summaries.
 
 ## Sage
 
+**Mode**: `subagent` | **Model**: `claude-opus-4` | [See configuration pipeline](config-pipeline.md#phase-2-agent-override--merge--remap)
+
 Central planning agent. Uses spec-driven methodology to analyze requirements, produce designs, and generate task lists.
+
+> 📌 **Agent Mode**: Sage runs as a subagent with a pinned model (Opus). It does not respect the user's UI model choice. Opus is selected for deep reasoning and complex planning tasks. See [config-pipeline.md](config-pipeline.md) for details on primary vs. subagent modes.
+
+### Model Recommendations
+
+**Recommended Model**: `claude-opus-4` (pinned)
+
+**Rationale**: Sage produces architectural decisions, specifications, and task decomposition — all demanding tasks that require deep reasoning, trade-off analysis, and long-context understanding. Opus excels at complex planning, multi-faceted reasoning, and producing coherent long-form content. These planning tasks are bottlenecks (serial, not parallel), so the slower but more capable model is justified. Opus's superior reasoning prevents bad plans that would waste Forge's time.
 
 > ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "ready"` or `status: "needs_scout"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
@@ -116,7 +154,17 @@ Sage MUST use Question tool (see [gates.md](gates.md#question-tool-enforcement))
 
 ## Forge
 
+**Mode**: `subagent` | **Model**: `claude-sonnet-4` | [See configuration pipeline](config-pipeline.md#phase-2-agent-override--merge--remap)
+
 Executor. Writes code based on task lists. Never autonomously initiates execution.
+
+> 📌 **Agent Mode**: Forge runs as a subagent with a pinned model (Sonnet). It does not respect the user's UI model choice. Sonnet is selected for balanced capability and speed in code generation. See [config-pipeline.md](config-pipeline.md) for details on primary vs. subagent modes.
+
+### Model Recommendations
+
+**Recommended Model**: `claude-sonnet-4` (pinned)
+
+**Rationale**: Forge executes code generation tasks — writing functions, refactoring, debugging, and testing. These tasks require good code reasoning but not the exhaustive depth of Opus. Sonnet provides a sweet spot: substantially faster than Opus with minimal quality loss for coding tasks. The speed advantage matters because Forge often runs multiple rounds (write → test → refactor) per feature. Sonnet's quality is sufficient for passing tests and code review by Ward and Arbiter.
 
 > ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "complete"`, `"artifacts_written"`, or `"committed"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
@@ -309,7 +357,17 @@ On feature completion (all tasks in tasks.md are marked `[x]`):
 
 ## Ward
 
+**Mode**: `subagent` | **Model**: `claude-haiku-4` | [See configuration pipeline](config-pipeline.md#phase-2-agent-override--merge--remap)
+
 Security reviewer. Operates after Forge implementation, before commit.
+
+> 📌 **Agent Mode**: Ward runs as a subagent with a pinned model (Haiku). It does not respect the user's UI model choice. Haiku is selected for fast security scanning. See [config-pipeline.md](config-pipeline.md) for details on primary vs. subagent modes.
+
+### Model Recommendations
+
+**Recommended Model**: `claude-haiku-4` (pinned)
+
+**Rationale**: Ward performs security audits — scanning for known CVEs, injection risks, cryptographic weaknesses, and credential leaks. These tasks are pattern-matching and rule-checking oriented. Haiku is sufficient for security reviews because vulnerabilities follow well-known patterns (OWASP Top 10). The speed advantage is significant: Ward runs on every change set before commit approval, so fast feedback is valuable. Haiku's lower cost also aligns with the high frequency of security review invocations.
 
 > ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "approve"` or `status: "reject"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
@@ -390,7 +448,17 @@ Security reviewer. Operates after Forge implementation, before commit.
 
 ## Arbiter
 
+**Mode**: `subagent` | **Model**: `claude-sonnet-4` | [See configuration pipeline](config-pipeline.md#phase-2-agent-override--merge--remap)
+
 Code quality reviewer. Operates after Forge implementation, before commit.
+
+> 📌 **Agent Mode**: Arbiter runs as a subagent with a pinned model (Sonnet). It does not respect the user's UI model choice. Sonnet is selected for thorough quality evaluation. See [config-pipeline.md](config-pipeline.md) for details on primary vs. subagent modes.
+
+### Model Recommendations
+
+**Recommended Model**: `claude-sonnet-4` (pinned)
+
+**Rationale**: Arbiter performs code quality review — checking for architectural violations, test coverage gaps, design pattern misuse, and clean code violations. These tasks require reasoning about domain logic, code structure, and testing strategy. Sonnet's reasoning depth is necessary to understand context-dependent quality issues (e.g., SRP violations, DDD boundary violations, missing edge cases). Sonnet strikes the right balance: more capable than Haiku (which might miss subtle design issues), but faster than Opus (quality review is sequential and must not become a bottleneck).
 
 > ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "approve"` or `status: "reject"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
