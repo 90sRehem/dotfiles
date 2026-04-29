@@ -4,6 +4,8 @@ Multi-agent system: Herald (coordinator), Scout (explorer), Sage (planner), Forg
 
 **Core tradeoff:** Correctness and clarity over speed. Use judgment for trivial tasks.
 
+> ⚠️ **All agents MUST emit a JSON envelope as their final output.** Format defined in `.agents/protocol.md`. No exceptions — free-text responses are invalid.
+
 ---
 
 ## Principles
@@ -20,6 +22,22 @@ Multi-agent system: Herald (coordinator), Scout (explorer), Sage (planner), Forg
 | Execution | Execute before describing |
 | Output | Avoid unnecessary verbosity |
 | Knowledge | Significant work → log to projets-wiki vault |
+| Context Awareness | Monitor context window usage; warn at 80%, pause at 95% |
+
+---
+
+## Context Management
+
+Agents must actively monitor their context window usage to prevent silent degradation or token exhaustion.
+
+**See also:** [Context Window Monitor](.agents/agents.md#context-window-monitor) — detailed hook interface and behavior specs
+
+Key thresholds:
+
+- **80% usage (warn)**: Agent emits warning but continues execution
+- **95% usage (pause)**: Agent stops and waits for user decision (continue, compact, or save-and-stop)
+
+The context monitor hook is nullable — if disabled, monitoring has no effect. Detailed behavior specs are in the agent definitions file.
 
 ---
 
