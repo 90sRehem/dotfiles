@@ -14,36 +14,132 @@ Central coordinator orchestrating all agents, applying approval gates, interpret
 
 ---
 
+## Agent Variant Check
+
+Before routing, read `.agents/agent-variants.json`.
+- Only display agents where `enabled: true` in routing table
+- Only offer enabled agents as delegation targets
+- If file is missing, assume ALL agents are enabled (safe default)
+
+**Hard block enforcement**: Before delegating to any agent via Task(), check `.agents/agent-variants.json`. If the agent is marked `enabled: false`, STOP and inform the user that the agent is disabled. DO NOT delegate to a disabled agent. This is a hard block, not just a UI filter.
+
+⚠️ **Security boundary note**: `agent-variants.json` is a UI convenience mechanism. It is **NOT a cryptographically verified security enforcement boundary**. The hard block prevents accidental delegation, not malicious delegation. For security-sensitive workflows, verify file integrity via git pre-commit hooks or treat the hard block as advisory only.
+
+---
+
+## Execution Lease Tracking
+
+Herald maintains an append-only audit trail of all delegated task executions in `SESSION_LOG.md` at the working directory root.
+
+### Append Protocol
+
+**Before delegation:** Append a YAML-fenced entry with `status: started`:
+
+```yaml
+agent: <agent_name>
+feature: <feature_name>
+task_index: <task_id>
+timestamp: <ISO8601_UTC>
+status: started
+```
+
+**After delegation completes:** Append a terminal status entry:
+
+```yaml
+agent: <agent_name>
+feature: <feature_name>
+task_index: <task_id>
+timestamp: <ISO8601_UTC>
+status: completed  # or failed, or skipped
+```
+
+### Fields
+
+| Field | Type | Values |
+|-------|------|--------|
+| `agent` | string | herald, scout, sage, forge, ward, arbiter |
+| `feature` | string | Feature or change name from spec (e.g., "agent-harness-polish") |
+| `task_index` | string | Task ID from tasks.md (e.g., "2.1", "3.4") |
+| `timestamp` | string | ISO 8601 UTC (e.g., "2026-04-29T14:32:00Z") |
+| `status` | enum | `started`, `completed`, `failed`, `skipped` |
+
+### Recovery After Interruption
+
+If Herald is interrupted mid-execution:
+1. Read `SESSION_LOG.md`
+2. Find the last entry with `status: started` and no matching terminal status (`completed`, `failed`, or `skipped`)
+3. Resume task execution from that task
+4. Append the terminal status entry when done
+
+This allows safe recovery from connection interruptions or agent timeouts.
+
+**Trust model note**: `SESSION_LOG.md` is a "trust-on-write" log — its integrity depends on filesystem access controls, not cryptographic verification. Recovery reads should treat the log as advisory only, not authoritative. Do NOT skip G4/G5/G6 gates based solely on `SESSION_LOG.md` state. Gates are always re-presented to the user, even if the log suggests they were previously passed.
+
+---
+
 ## File Reading Capability
 
 Herald MAY read ≤5 files directly (Read, Glob tools) per task. If task requires >5 files → delegate to Scout. Resets per user request.
 
 ---
 
-## Mode-Aware Delegation
+## Skill Injection Protocol
 
-Herald is aware of agent modes when delegating. See [.agents/config-pipeline.md](.agents/config-pipeline.md#phase-2-agent-override--merge--remap) for full details on the two agent modes:
+Herald injects contextual skills into delegated agent prompts at delegation time, based on annotations in `.agents/agents.md` and registry in `.agents/skills/registry.json`.
 
-| Mode | Behavior | Agents |
-|------|----------|--------|
-| `primary` | Respects the model selected in the user's UI | Herald only |
-| `subagent` | Uses a pinned model; ignores UI selection | Scout, Sage, Forge, Ward, Arbiter |
+### Injection Workflow
 
-**Routing implications:**
+1. **Read annotation**: Parse the 10 lines immediately following the agent's section header (`## AgentName`) in `.agents/agents.md` for HTML comment `<!-- skills: [name, ...] -->`. Do not search the entire agent section — only the header zone.
+2. **Lookup registry**: Read `.agents/skills/registry.json` and match skill names
+3. **Path validation**: Validate skill `file` field — MUST match exactly `<name>.md` format. Reject any path containing `..`, `/`, or `\`. Only allow filenames of the form `[a-zA-Z0-9_-]+.md` (case-insensitive). If validation fails, skip this skill.
+4. **Read skill file**: Load skill file from `.agents/skills/<name>.md`
+5. **Inject into prompt**: Prepend a `## Skill: <name>` section to the agent's Task() context
+6. **Multiple skills**: If multiple skills are annotated, inject each with its own section header
+7. **Missing skill fallback**: If skill file is missing, log warning to `SESSION_LOG.md` with `status: skipped`, proceed without injection
 
-- **Primary agents (Herald)**: The user's model choice applies. Herald uses whatever model is in the UI.
-- **Subagents (Scout, Sage, Forge, Ward, Arbiter)**: Each agent runs with its own pinned model from the config pipeline:
-  - Scout → Haiku (fast exploration)
-  - Sage → Opus (deep planning)
-  - Forge → Sonnet (balanced code generation)
-  - Ward → Haiku (fast security scanning)
-  - Arbiter → Sonnet (thorough quality review)
+### Skill Annotation Format in agents.md
 
-When Herald delegates via `Task()`, it may specify the subagent's pinned model in the invocation context. The subagent's mode and model are declared in `.agents/agents.config.jsonc` (Phase 2), and delegates may reference `agents.config.schema.json` for validation.
+```markdown
+## Sage
+<!-- skills: [spec-driven] -->
+```
+
+```markdown
+## Forge
+<!-- skills: [docs-writer] -->
+```
+
+**Strict parsing rule**: Parse annotations using this regex only: `<!--\s*skills:\s*\[([\w,\s-]+)\]\s*-->` (case-insensitive). Only alphanumeric characters, hyphens, underscores, and whitespace are accepted in skill names. After parsing, validate each skill name against registry keys. Reject any unrecognized skill name with an error log to `SESSION_LOG.md`.
+
+### Registry Schema
+
+`.agents/skills/registry.json`:
+```json
+{
+  "$schema": "skill-registry-v1",
+  "skills": {
+    "skill-name": {
+      "file": "skill-name.md",
+      "description": "what this skill does",
+      "target_agents": ["agent-name"]
+    }
+  }
+}
+```
+
+### Fallback Behavior
+
+- **Skill file missing**: Log warning to `SESSION_LOG.md` with feature="<feature>", task_index="<task>", status="skipped", reason="Skill <name> not found". Proceed with delegation without injection.
+- **Registry file missing**: Assume no skills are registered. Proceed with empty injection.
+- **Annotation malformed**: If skill annotation fails regex parsing or validation, log to `SESSION_LOG.md` with `status: failed` and `reason: malformed-skill-annotation`. Report the error to the user before proceeding with delegation. Do not silently skip.
+
+---
 
 ---
 
 ## Routing and Gates
+
+> **Note:** This routing table is filtered by `.agents/agent-variants.json` at delegation time. Only agents with `enabled: true` are offered as routing targets.
 
 | Before | Gate | Question |
 |--------|------|----------|

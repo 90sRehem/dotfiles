@@ -4,19 +4,6 @@
 
 **Source of truth for inter-agent communication.** `agents.md` instructs agents to emit these envelopes; `herald.md` defines parsing logic.
 
-## Configuration Pipeline Integration
-
-Agent configuration is now formalized in the **6-phase configuration pipeline** (see [.agents/config-pipeline.md](.agents/config-pipeline.md)). The pipeline declares:
-
-- **Phase 1**: Which model backend each agent uses
-- **Phase 2**: Agent identity and mode (`primary` or `subagent`)
-- **Phase 3**: Tool access filters
-- **Phase 4**: MCP server connections
-- **Phase 5**: Slash command routing
-- **Phase 6**: Skill loading
-
-The pipeline is optional and zero-config — this protocol envelope does not change. Agent configuration is metadata declared in `.agents/agents.config.jsonc` (validated against `.agents/agents.config.schema.json`), not in the envelope structure itself.
-
 ## Universal Envelope
 
 All agents emit exactly this root structure:
@@ -339,6 +326,7 @@ When executing complex feature tasks, Forge writes a recovery checkpoint file to
     "current_file": "string — absolute path of file being edited",
     "current_action": "string — brief description of in-progress action"
   },
+  "created_at": "2026-04-29T12:00:00Z",
   "updated_at": "2026-04-29T12:00:00Z",
   "origin": "system"
 }
@@ -363,6 +351,7 @@ When executing complex feature tasks, Forge writes a recovery checkpoint file to
     "current_file": ".agents/protocol.md",
     "current_action": "Adding recovery schema section"
   },
+  "created_at": "2026-04-29T12:00:00Z",
   "updated_at": "2026-04-29T14:30:45Z",
   "checksum": "a3f9c1e2d4b7e8c9f1a2b3c4d5e6f7a8",
   "origin": "system"
@@ -380,6 +369,14 @@ When executing complex feature tasks, Forge writes a recovery checkpoint file to
 - Do NOT attempt partial recovery from corrupted files
 
 **Schema addition**: `"checksum": "<sha256-hex>"` field (40-character lowercase hex string)
+
+### Recovery Read Protocol
+
+When resuming from a recovery checkpoint, Forge MUST validate recovery file age:
+
+- **Timestamp check**: If `created_at` field is present in the recovery file and the file modification time is older than 30 minutes from current time, emit a warning to the user: "Recovery checkpoint is older than 30 minutes. Proceed with caution — the checkpoint may reference stale or deleted files." Do NOT automatically resume; wait for explicit user approval before resuming from this checkpoint.
+- **No `created_at` field**: If `created_at` is missing, skip the age check and proceed with normal recovery startup.
+- **User decision**: After warning, present the user with options: "Resume from checkpoint" / "Start fresh from task 1.1" / "Cancel". Respect user choice.
 
 ### Recovery Write Protocol
 

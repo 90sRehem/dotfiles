@@ -47,6 +47,8 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 
 **Never delegate:** single-file edits, targeted known commands.
 
+**Agent availability:** Agent availability depends on `.agents/agent-variants.json`. Check this file to determine which agents are enabled in the current workspace.
+
 ---
 
 ## Integrations
@@ -62,6 +64,11 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 - Agent/tooling lessons: `opencode/logs/`
 - Skip logs for trivial tasks
 
+**SESSION_LOG.md** — append-only execution audit trail
+- Location: working directory root
+- Herald appends `started` before delegation, `completed`/`failed`/`skipped` after
+- Enables recovery from interruptions; see [Herald recovery protocol](.agents/herald.md#recovery-after-interruption)
+
 ---
 
 ## Detailed Instructions
@@ -71,21 +78,4 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 - [Herald](.agents/herald.md) — routing, quick flow, commit flow
 - [Agent Definitions](.agents/agents.md) — Scout, Sage, Forge, Ward, Arbiter
 
----
 
-## Configuration Pipeline
-
-The **6-phase configuration pipeline** (see [.agents/config-pipeline.md](.agents/config-pipeline.md)) formally declares agent behavior across the system.
-
-**The pipeline phases:**
-
-1. **Provider Detect** — Which model backend?
-2. **Agent Override / Merge** — Agent identity & mode (primary or subagent)?
-3. **Tool Filter** — Which tools can each agent use?
-4. **MCP Load** — Which servers to connect to?
-5. **Command Inject** — Which slash commands available?
-6. **Skill Compose** — Which skills to load?
-
-**Configuration file** (optional): `.agents/agents.config.jsonc`
-
-The system works identically without the config file (zero-config guarantee). The JSONC file is purely declarative — it documents and optionally overrides the defaults. See [.agents/config-pipeline.md](.agents/config-pipeline.md) for full details on each phase, semantics, and examples.
