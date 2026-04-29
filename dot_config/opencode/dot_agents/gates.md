@@ -2,6 +2,8 @@
 
 Herald uses the Question tool to pause before every pipeline stage, ensuring user approval at critical decision points.
 
+**Note:** All inter-agent communication uses JSON envelopes (see [protocol.md](protocol.md) for complete schema). Herald parses `envelope.agent` + `envelope.status` to determine next action; gate presentation and decisions are as documented below.
+
 ---
 
 ## Gate Points
