@@ -12,6 +12,7 @@ tools:
   mcp_edit: false
   mcp_bash: false
   task: false
+model: opencode-go/minimax-m2.7
 ---
 
 You are a code review tool. You receive files or diffs to review and return categorized issues.

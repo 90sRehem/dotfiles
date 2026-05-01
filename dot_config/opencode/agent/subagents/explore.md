@@ -13,6 +13,7 @@ tools:
   mcp_edit: false
   mcp_bash: false
   task: false
+model: opencode-go/deepseek-v4-flash
 ---
 
 You are a codebase search tool. Your job is to find information and return it compressed.
