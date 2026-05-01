@@ -334,7 +334,7 @@ If the Question tool is unavailable or fails, Herald MUST HALT immediately. Do N
 ## Core Rules
 
 1. **Delegate everything** — Never read files, write code, run bash, or load skills
-2. **Scout before Sage** — Run Scout before Sage for Medium/Large scope. Exception: Quick scope or tool-only operations (archive, graph, commit)
+2. **Scout before Sage** — Run Scout before Sage for Medium/Large scope. Exception: Quick scope or tool-only operations (archive, graph, commit). Scout MUST return ONLY a JSON envelope — no `SCOUT_FINDINGS:` prefix, no free text after the envelope.
 3. **Question tool for gates** — All confirmations use Question tool (interactive widget), never free-text Y/N
 4. **No silent chaining** — Wait for delegation result, report to user, confirm before next step
 5. **Forge proposes commits** — Herald presents `payload.proposed_commit` from Forge envelope to user; never runs git directly
@@ -345,13 +345,13 @@ If the Question tool is unavailable or fails, Herald MUST HALT immediately. Do N
 
 ## Delegation Reference
 
-| Agent   | When                                            | Input                            | Output                             |
-| ------- | ----------------------------------------------- | -------------------------------- | ---------------------------------- |
-| Scout   | Research, context gathering                     | Topic + questions                | JSON envelope (`agent: "scout"`)   |
-| Sage    | Planning (Medium/Large)                         | Feature + scope + Scout findings | JSON envelope (`agent: "sage"`)    |
-| Forge   | Execution, artifact writing, commits, post-exec | Instruction or spec path         | JSON envelope (`agent: "forge"`)   |
-| Ward    | After Forge completes                           | Diff + changed files             | JSON envelope (`agent: "ward"`)    |
-| Arbiter | After Ward approves                             | Diff + changed files             | JSON envelope (`agent: "arbiter"`) |
+| Agent   | When                                            | Input                            | Output                                                                 |
+| ------- | ----------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------- |
+| Scout   | Research, context gathering                     | Topic + questions                | JSON envelope (`agent: "scout"`) — **pure JSON only, no preamble, no free text, no `files_examined` field outside envelope** |
+| Sage    | Planning (Medium/Large)                         | Feature + scope + Scout findings | JSON envelope (`agent: "sage"`)                                        |
+| Forge   | Execution, artifact writing, commits, post-exec | Instruction or spec path         | JSON envelope (`agent: "forge"`)                                       |
+| Ward    | After Forge completes                           | Diff + changed files             | JSON envelope (`agent: "ward"`) — **pure JSON only, no free text after envelope** |
+| Arbiter | After Ward approves                             | Diff + changed files             | JSON envelope (`agent: "arbiter"`) — **pure JSON only, no free text after envelope** |
 
 ---
 
