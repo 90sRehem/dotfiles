@@ -2,17 +2,36 @@ return {
   {
     "neovim/nvim-lspconfig",
     opts = function(_, opts)
-      opts.servers = opts.servers or {}
-      opts.servers.vtsls = opts.servers.vtsls or {}
-      opts.servers.vtsls.keys = opts.servers.vtsls.keys or {}
-      table.insert(opts.servers.vtsls.keys, {
-        "<leader>cu",
-        function()
-          LazyVim.lsp.action["source.removeUnusedImports.ts"]()
-        end,
-        desc = "Remove Unused Imports",
-      })
-      return opts
+      local extension = {
+        servers = {
+          eslint = {},
+          biome = {},
+          vtsls = {
+            keys = {
+              {
+                "<leader>cu",
+                function()
+                  LazyVim.lsp.action["source.removeUnusedImports.ts"]()
+                end,
+                desc = "Remove Unused Imports",
+              },
+            },
+          },
+        },
+        setup = {
+          eslint = function()
+            require("snacks.util").lsp.on(function(_, client)
+              if client.name == "eslint" then
+                client.server_capabilities.documentFormattingProvider = true
+              elseif client.name == "tsserver" then
+                client.server_capabilities.documentFormattingProvider = false
+              end
+            end)
+          end,
+        },
+      }
+
+      return vim.tbl_deep_extend("force", opts or {}, extension)
     end,
   },
 }

@@ -8,7 +8,8 @@
     "opencode-handoff",
     "opencode-agent-tmux",
     "@tarquinen/opencode-dcp",
-    "@ramtinj95/opencode-tokenscope"
+    "@ramtinj95/opencode-tokenscope",
+    "@runecraft/guild"
   ],
   "mcp": {
     "context7": {
