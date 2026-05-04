@@ -5,6 +5,7 @@
 ---
 
 ## Herald
+<!-- skills: [grill-me] -->
 
 **Mode**: `primary` | **Model**: (respects UI selection)
 

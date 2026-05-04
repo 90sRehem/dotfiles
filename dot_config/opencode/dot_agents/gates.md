@@ -11,7 +11,7 @@ Herald uses the Question tool to pause before every pipeline stage, ensuring use
 | Gate | Trigger | Question to User |
 |------|---------|-----------------|
 | G0: Intent | Quick scope detected — before any action | "How do you want to proceed?" (Implement directly / Review plan first / Use Sage) |
-| G1: Plan | Before invoking Sage | "Ready to plan [feature]?" |
+| G1: Plan | Before invoking Sage | "Ready to plan [feature]? (or type 'adjust <plan>' to modify an existing plan)" |
 | G2: Write Specs | Before Forge writes spec artifacts | "Plan ready. Write spec files?" |
 | G3: Execute | Before Forge implements code | "Tasks defined. Start implementation?" |
 | G4/G5: Review | After Forge completes — before Ward/Arbiter | "Which reviews to run?" (Security+Quality parallel / Security only / Quality only / Skip / Cancel) |
@@ -39,6 +39,43 @@ When Forge is executing complex tasks (resumable workflows), gate passage trigge
 | G6 (Commit) | User approves commit. Forge writes final checkpoint before executing git commit. |
 
 These gate-triggered checkpoints ensure that recovery can restart cleanly at gate boundaries, not mid-task.
+
+---
+
+## Command-Triggered Workflows
+
+Command-triggered workflows are skills that fire on explicit user commands, not at fixed gate checkpoints. They are **not gates** — they do not block progress or appear in the gate numbering (G1–G6).
+
+### grill-me (Adjust Plan)
+
+**Trigger commands**: `adjust plan`, `adjust <plan>`, `/adjust`, `modify plan`, `change plan`, `that's not what I meant`, `this isn't right`
+
+**Workflow type**: `command_triggered` (not a gate)
+
+**Target agent**: `herald`
+
+**Interview protocol**:
+1. Herald detects a trigger command in user input (case-insensitive substring match)
+2. Herald loads the grill-me skill from registry → `.agents/skills/grill-me.md`
+3. Herald conducts a structured interview: one question at a time, with recommendations
+4. Interview walks the change tree depth-first (root complaint → scope → approach → constraints → details → priority → success criteria)
+5. Interview stops when shared understanding is reached
+
+**Output**: grill-me produces a JSON envelope with:
+- `payload.root_complaint`: The user's initial dissatisfaction
+- `payload.clarifications[]`: Array of resolved branches (branch, current_plan_says, question, answer, why, decision)
+- `payload.summary`: Concise description of what the revised plan should look like
+- `payload.unresolved[]`: Any branches that couldn't be resolved
+
+**Re-planning flow**:
+1. Herald constructs re-planning context: existing plan reference + grill-me clarifications + summary
+2. Herald dispatches Sage with instruction: "Revise the existing plan to incorporate these adjustments"
+3. Sage produces a revised plan
+4. User reviews → satisfied (proceed to Forge) or adjusts again
+
+**Iteration limit**: Maximum 3 re-plan iterations per plan. After 3 iterations, Herald blocks further adjustments and suggests: human pair review or feature breakdown.
+
+**When it does NOT fire**: grill-me never fires on the happy path. A well-specified request goes straight through G1 → Scout → Sage → Forge with no interview.
 
 ---
 

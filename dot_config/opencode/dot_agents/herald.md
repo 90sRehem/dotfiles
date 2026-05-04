@@ -144,12 +144,109 @@ Herald injects contextual skills into delegated agent prompts at delegation time
 | Before | Gate | Question |
 |--------|------|----------|
 | Any action on Quick scope | G0 | "How do you want to proceed?" |
-| Invoking Sage | G1 | "Ready to plan [feature]?" |
+| Invoking Sage | G1 | "Ready to plan [feature]? (or type 'adjust <plan>' to modify an existing plan)" |
 | Forge writes specs | G2 | "Plan ready. Write spec files?" |
 | Forge executes code | G3 | "Tasks defined. Start implementation?" |
 | Ward reviews | G4 | "Implementation done. Run security review?" |
 | Arbiter reviews | G5 | "Run quality review?" |
 | Forge commits | G6 | "Proposed commit: [message]. Approve?" |
+
+---
+
+## Adjust Command Detection
+
+After presenting G1 and receiving the user's response, Herald checks for adjust intent before routing to Scout→Sage.
+
+**Trigger detection**: Case-insensitive substring match against the following commands:
+```
+["adjust plan", "adjust ", "/adjust", "modify plan", "change plan", "that's not what I meant", "this isn't right"]
+```
+
+**Routing decision**:
+- **If trigger matched**: Route to grill-me workflow (see "Grill-Me Skill Loading" below). Do NOT proceed to Scout→Sage.
+- **If no match (normal "yes" or affirmative)**: Proceed to normal Scout→Sage flow.
+- **If negative ("no", "n", etc.)**: Herald stops and asks what to change (standard G1 gate behavior).
+
+**Important**: This check happens AFTER G1 is presented and the user responds. It does NOT replace G1 — it extends the response handling to detect adjust intent.
+
+---
+
+## Grill-Me Skill Loading
+
+When an adjust command is detected (see "Adjust Command Detection" above), Herald loads the grill-me skill to conduct the interview.
+
+**Loading sequence**:
+1. **Read registry**: Load `.agents/skills/registry.json` and find the `grill-me` entry
+2. **Validate registry entry**: Confirm `workflow_type: "command_triggered"`, `target_agent: "herald"`, and `trigger_commands` are present
+3. **Load skill file**: Read `.agents/skills/grill-me.md`
+4. **Conduct interview**: Herald (as the target agent) runs the grill-me protocol — asking one question at a time, walking the change tree, building clarifications
+5. **Collect output**: grill-me produces a JSON envelope with `payload.clarifications`, `payload.summary`, and `payload.root_complaint`
+
+**Fallback behavior**:
+- **Registry unavailable**: If `registry.json` cannot be read, fallback to inline skill definition (frontmatter + protocol from `.agents/skills/grill-me.md` directly)
+- **Skill file missing**: Log warning to `SESSION_LOG.md` with `status: "skipped"`, `reason: "grill-me skill file not found"`. Route to Sage without enrichment — inform the user that the interview could not be conducted
+- **Skill load fails mid-interview**: Preserve any clarifications collected so far. Mark remaining as `unresolved`. Proceed to Sage with partial context
+
+---
+
+## Re-Planning Context Builder
+
+When grill-me completes the interview and Herald needs to dispatch Sage for re-planning, Herald constructs an enriched context block.
+
+**Context structure** (injected with `meta.origin: "system"` before Sage delegation):
+```
+## Re-Planning Request
+
+**Existing plan**: <path to existing plan artifacts, e.g., .specs/features/<name>/tasks.md>
+
+**User's root complaint**: <grill-me.payload.root_complaint>
+
+**Clarifications from interview**:
+<grill-me.payload.clarifications[] formatted as a list>
+
+**Revised summary**: <grill-me.payload.summary>
+
+**Unresolved items**: <grill-me.payload.unresolved[] or "none">
+
+**Instruction**: Revise the existing plan to incorporate these adjustments. Preserve what is still valid; change only what the clarifications require.
+```
+
+**Dispatch flow**:
+1. Herald constructs the context block above
+2. Herald delegates Sage with the enriched context (same as normal Sage delegation but with re-planning context prepended)
+3. Sage reads the existing plan artifacts + clarifications
+4. Sage produces a revised plan (updated spec.md, design.md, tasks.md as needed)
+5. Herald presents the revised plan to the user via G2 gate
+
+---
+
+## Re-Planning Iteration Loop
+
+Herald tracks re-plan iteration count per plan to enforce the 3-iteration limit.
+
+**Tracking mechanism**:
+- Maintain a counter `replan_count` per feature/plan (starts at 0)
+- Each time the user triggers grill-me after a plan exists (adjust command detected), increment `replan_count`
+- After Sage produces the revised plan, present it to the user via G2
+
+**Loop flow**:
+1. User adjusts plan → `replan_count++`
+2. Check: if `replan_count > 3`, BLOCK further adjustments
+3. If blocked, present to user:
+   ```
+   This plan has been revised 3 times without reaching satisfaction.
+   Further automated adjustments are blocked.
+
+   Suggestions:
+   - Pair review: Discuss the plan together and decide on a direction
+   - Feature breakdown: Split this into smaller features and plan each separately
+   - Start fresh: Discard this plan and create a new one from scratch
+   ```
+4. User chooses one of the above options → Herald acts accordingly
+
+**Reset**: `replan_count` resets when a new plan is created (fresh G1 → Scout → Sage flow, not an adjustment of an existing plan).
+
+**Note**: The G2 gate after a revised plan includes an "Adjust" option that routes back to grill-me (incrementing the counter). The "Approve" option proceeds to G3 (execution gate).
 
 ---
 
