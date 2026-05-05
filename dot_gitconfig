@@ -11,15 +11,12 @@
 	name = Jonathan Rehem
 	email = jonathan.rehem@outlook.com
 
-[includeIf "gitdir:~/Documents/dev/work/hyperlocal/"]
-  path = ~/Documents/dev/work/hyperlocal/.gitconfig-hyperlocal
-
+[includeIf "gitdir:/home/rehem/Documents/dev/work/act/globo/"]
+    path = /home/rehem/Documents/dev/work/act/globo/.gitconfig-globo
 
 [includeIf "gitdir:~/Documents/dev/work/sdwc/"]
   path = ~/Documents/dev/work/sdwc/.gitconfig-sdwc
 [credential "https://github.com"]
-	helper = 
 	helper = !/usr/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
 	helper = !/usr/bin/gh auth git-credential

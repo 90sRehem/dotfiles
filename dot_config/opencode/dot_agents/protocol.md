@@ -97,9 +97,9 @@ Agents must assign the correct `origin` value based on the message producer.
 
 ## Sage Schema
 
-**Status values:** `ready` | `needs_scout`
+**Status values:** `ready` | `needs_scout` | `specs_to_write`
 
-**Status: ready**
+**Status: ready** (specs written directly by Sage to disk)
 ```json
 {
   "agent": "sage",
@@ -111,7 +111,22 @@ Agents must assign the correct `origin` value based on the message producer.
     "scope": "quick|medium|large",
     "key_decisions": ["string — architectural decision"],
     "task_count": 0,
-    "next_action": "proceed_to_g2"
+    "next_action": "proceed_to_g1"
+  }
+}
+```
+
+**Status: specs_to_write** (Sage produced content, delegates Forge to write files)
+```json
+{
+  "agent": "sage",
+  "schema_version": "1.0",
+  "status": "specs_to_write",
+  "payload": {
+    "change_name": "string — feature slug",
+    "artifacts": ["string — target file paths"],
+    "scope": "quick|medium|large",
+    "content": "string — spec content to write (or inline tasks for Quick)"
   }
 }
 ```
@@ -161,7 +176,7 @@ Agents must assign the correct `origin` value based on the message producer.
 }
 ```
 
-**Status: artifacts_written** (after ARTIFACTS WRITE MODE)
+**Status: artifacts_written** (after ARTIFACTS WRITE MODE — Sage delegated spec writing)
 ```json
 {
   "agent": "forge",
@@ -281,22 +296,94 @@ Agents must assign the correct `origin` value based on the message producer.
 ```
 1. Parse output as JSON → envelope
 2. Switch envelope.agent:
-   - "scout"   → SCOUT_FINDINGS: inject payload.findings to next Sage
+   - "scout"   → SCOUT_FINDINGS: inject payload.findings to Sage
    - "sage"    → switch envelope.status:
-                    "ready"       → present G2 with payload.change_name, payload.artifacts
-                    "needs_scout" → delegate Scout with payload.topic
+                    "ready"         → specs written to disk; proceed to G1 (plan approval)
+                    "specs_to_write" → delegate Forge in ARTIFACTS WRITE MODE, then present G1
+                    "needs_scout"   → delegate Scout with payload.topic
    - "forge"   → switch envelope.status:
-                    "complete"        → start Post-Forge Protocol (G4→G5→G6)
-                    "artifacts_written" → present G3
-                    "committed"       → execute POST-EXECUTION
+                    "complete"          → start Post-Forge Protocol (G4 opt-in → G5 opt-in → G6)
+                    "artifacts_written" → specs now on disk; present G1 (plan approval)
+                    "committed"         → execute POST-EXECUTION
    - "ward"    → switch envelope.status:
-                    "approve" → present G5
+                    "approve" → present G5 result
                     "reject"  → present findings to user (fix/dismiss/abort)
    - "arbiter" → switch envelope.status:
-                    "approve" → present G6
+                    "approve" → present G6 (commit gate)
                     "reject"  → present findings to user (fix/dismiss/abort)
 3. If parse fails → log error, request agent to re-emit in correct format
 ```
+
+---
+
+## Workflow Schema
+
+Workflows are declarative JSON files in `.agents/workflows/` that define custom agent routing sequences. Herald loads and executes them on demand.
+
+**Location:** `.agents/workflows/<name>.jsonc`
+
+**Schema:**
+```json
+{
+  "workflow_version": "1.0",
+  "name": "string — human-readable workflow name",
+  "description": "string — what this workflow does",
+  "scope": "quick|medium|large",
+  "steps": [
+    {
+      "agent": "scout|sage|forge|ward|arbiter",
+      "gate_after": "G0|G1|G4|G5|G6",
+      "skip_on": "condition expression (optional)"
+    }
+  ],
+  "spec_artifacts": ["string — files Sage must write"],
+  "gates_required": ["G0", "G1", "G6"],
+  "gates_optional": ["G4", "G5"]
+}
+```
+
+**Example (debug-triage):**
+```json
+{
+  "workflow_version": "1.0",
+  "name": "Debug Triage",
+  "description": "Quick investigation and fix for a reported bug",
+  "scope": "quick",
+  "steps": [
+    { "agent": "sage", "gate_after": "G1" },
+    { "agent": "forge", "gate_after": "G6" }
+  ],
+  "spec_artifacts": ["tasks.md"],
+  "gates_required": ["G0", "G1", "G6"],
+  "gates_optional": []
+}
+```
+
+**Example (secure-feature):**
+```json
+{
+  "workflow_version": "1.0",
+  "name": "Secure Feature",
+  "description": "Full feature development with security and quality review",
+  "scope": "large",
+  "steps": [
+    { "agent": "sage", "gate_after": "G1" },
+    { "agent": "forge", "gate_after": "G4" },
+    { "agent": "ward", "gate_after": "G5" },
+    { "agent": "arbiter", "gate_after": "G6" }
+  ],
+  "spec_artifacts": ["spec.md", "design.md", "tasks.md"],
+  "gates_required": ["G0", "G1", "G6"],
+  "gates_optional": ["G4", "G5"]
+}
+```
+
+**Workflow Execution Rules:**
+- Herald loads workflow from `.agents/workflows/<name>.jsonc`
+- Each step executes in order; `gate_after` determines which gate presents after that agent completes
+- `skip_on` allows conditional step skipping (e.g., `"skip_on": "scope == quick"`)
+- `spec_artifacts` tells Sage which files to write for this scope
+- `gates_required` are always enforced; `gates_optional` are offered to user
 
 ---
 

@@ -1,50 +1,77 @@
 # Approval Gate System
 
-Herald uses the Question tool to pause before every pipeline stage, ensuring user approval at critical decision points.
+Herald uses the Question tool to pause before critical pipeline stages, ensuring user approval at key decision points. Gates are **scope-adaptive** — only required gates are presented based on task complexity.
 
 **Note:** All inter-agent communication uses JSON envelopes (see [protocol.md](protocol.md) for complete schema). Herald parses `envelope.agent` + `envelope.status` to determine next action; gate presentation and decisions are as documented below.
 
 ---
 
-## Gate Points
+## Gate Points (Simplified)
 
-| Gate | Trigger | Question to User |
-|------|---------|-----------------|
-| G0: Intent | Quick scope detected — before any action | "How do you want to proceed?" (Implement directly / Review plan first / Use Sage) |
-| G1: Plan | Before invoking Sage | "Ready to plan [feature]? (or type 'adjust <plan>' to modify an existing plan)" |
-| G2: Write Specs | Before Forge writes spec artifacts | "Plan ready. Write spec files?" |
-| G3: Execute | Before Forge implements code | "Tasks defined. Start implementation?" |
-| G4/G5: Review | After Forge completes — before Ward/Arbiter | "Which reviews to run?" (Security+Quality parallel / Security only / Quality only / Skip / Cancel) |
-| G6: Commit | Before Forge commits | "Proposed commit: [message]. Approve?" |
+| Gate | Trigger | Question to User | Obrigatório? |
+|------|---------|-----------------|-------------|
+| G0: Intent | Quick scope detected | "How do you want to proceed?" (Implement / Review plan first / Use Sage) | Quick apenas |
+| G1: Approve Plan | Sage retorna com specs prontos | "Plano pronto. Aprovar e prosseguir?" | Sim (todos scopes) |
+| G4/G5: Review | Após Forge completar | "Quer rodar reviews?" (Security+Quality / Skip) | **Opt-in** (default: oferecer) |
+| G6: Commit | Antes do commit | "Proposed commit: [message]. Approve?" | Sim |
+
+**Eliminados:** G2 (write specs) e G3 (execute) — Sage escreve specs direto, Forge executa após G1.
+
+---
+
+## Fluxo por Scope
+
+### Quick (tarefas pequenas, tracking via specs)
+
+```
+Herald → G0 → Sage (escreve tasks.md direto) → G1 → Forge → G6 → done
+```
+
+**Specs:** Apenas `tasks.md` em `.specs/features/<name>/`
+
+### Medium (escopo claro, 2-5 arquivos)
+
+```
+Herald → Sage (escreve spec.md + tasks.md direto) → G1 → Forge → [G4/G5 opt-in] → G6 → done
+```
+
+**Specs:** `spec.md` + `tasks.md`
+
+### Large (arquitetural, multi-arquivo)
+
+```
+Herald → Sage (escreve spec.md + design.md + tasks.md OU delega Forge) → G1 → Forge → [G4/G5 recomendado] → G6 → done
+```
+
+**Specs:** `spec.md` + `design.md` + `tasks.md`
+**Nota:** Para Large, Sage pode escrever direto OU delegar Forge em ARTIFACTS WRITE MODE se content >800 linhas.
 
 ---
 
 ## Gate Rules
 
-- **Mandatory enforcement**: Herald MUST NOT skip gates. No bypass paths exist.
+- **Mandatory enforcement**: G1 e G6 NUNCA são pulados. G0 só no Quick. G4/G5 são oferecidos, não obrigatórios.
 - **Affirmative** ("yes", "y", "go", "sim", "s") → proceed
 - **Negative** ("no", "n", "não") → Herald stops and asks what to change
-- **Opt-out**: User may say "skip gates" to disable for current session (not recommended)
+- **Opt-out**: User may say "skip gates" to disable G4/G5 for current session
+
+---
 
 ## Recovery Checkpoints at Gates
 
-When Forge is executing complex tasks (resumable workflows), gate passage triggers a recovery checkpoint distinct from task-level checkpoints.
-
-**See also:** [Forge Recovery Startup & Cleanup](agents.md#recovery-startup) — detailed checkpoint behavior
+When Forge is executing complex tasks (resumable workflows), gate passage triggers a recovery checkpoint.
 
 | Gate | Checkpoint Trigger |
 |------|-------------------|
-| G3 (Execute) | User approves execution. Forge writes initial checkpoint before starting task 1. |
-| G4/G5 (Review) | User chooses review option. Forge writes checkpoint with all completed tasks before delegating Ward/Arbiter. |
-| G6 (Commit) | User approves commit. Forge writes final checkpoint before executing git commit. |
-
-These gate-triggered checkpoints ensure that recovery can restart cleanly at gate boundaries, not mid-task.
+| G1 (Approve Plan) | User aprova plano. Forge escreve checkpoint antes de começar task 1. |
+| G4/G5 (Review) | User escolhe review. Forge escreve checkpoint com tasks completadas antes de delegar Ward/Arbiter. |
+| G6 (Commit) | User aprova commit. Forge escreve checkpoint final antes de git commit. |
 
 ---
 
 ## Command-Triggered Workflows
 
-Command-triggered workflows are skills that fire on explicit user commands, not at fixed gate checkpoints. They are **not gates** — they do not block progress or appear in the gate numbering (G1–G6).
+Command-triggered workflows are skills that fire on explicit user commands, not at fixed gate checkpoints. They are **not gates** — they do not block progress or appear in the gate numbering (G0–G6).
 
 ### grill-me (Adjust Plan)
 
@@ -75,13 +102,13 @@ Command-triggered workflows are skills that fire on explicit user commands, not 
 
 **Iteration limit**: Maximum 3 re-plan iterations per plan. After 3 iterations, Herald blocks further adjustments and suggests: human pair review or feature breakdown.
 
-**When it does NOT fire**: grill-me never fires on the happy path. A well-specified request goes straight through G1 → Scout → Sage → Forge with no interview.
+**When it does NOT fire**: grill-me never fires on the happy path. A well-specified request goes straight through G0/G1 → Sage → Forge with no interview.
 
 ---
 
 ## Question Tool Enforcement
 
-Question tool is mandatory for **all** gates G1-G6 AND for any user-facing interaction requiring a choice:
+Question tool is mandatory for **all gates G0-G6** AND for any user-facing interaction requiring a choice:
 
 - Presenting Ward/Arbiter findings
 - Presenting Sage artifacts for approval
@@ -121,3 +148,24 @@ When context window reaches critical capacity and compaction is triggered, Forge
 7. **On completion**: Forge deletes recovery file and logs to vault
 
 This flow ensures resumption is transparent to the user and maintains execution continuity across compaction events.
+
+---
+
+## Review Gate (G4/G5) — Opt-in Behavior
+
+Após Forge retornar `status: "complete"`, Herald apresenta gate combinado:
+
+**Opções:**
+- **"Security + Quality (parallel)"** — Executa Ward e Arbiter em paralelo
+- **"Security only"** — Só Ward
+- **"Quality only"** — Só Arbiter  
+- **"Skip reviews"** → Vai direto para G6
+- **"Cancel"** — Para, mudanças não commitadas
+
+**Padrão:** Review é **oferecido**, não obrigatório. Para Large scope, Herald recomenda explicitamente rodar reviews.
+
+**Rejeições:** Se Ward/Arbiter retornar `reject`, Herald apresenta findings com opções:
+- "Fix all issues" → Delega findings para Forge, re-roda review
+- "Partial fix" → Escolhe quais findings endereçar
+- "Dismiss findings" → Prossegue para G6 (aceita risco)
+- "Abort" → Para, deixa mudanças como estão

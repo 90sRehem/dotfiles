@@ -77,7 +77,7 @@ Herald interprets and presents human-readable summaries.
 
 **Mode**: `subagent` | **Model**: `claude-opus-4`
 
-Central planning agent. Uses spec-driven methodology to analyze requirements, produce designs, and generate task lists.
+Central planning agent. Uses spec-driven methodology to analyze requirements, produce designs, and generate task lists. **Sage pode fazer explore inline** — usa Glob/Grep/Read direto, ou delega Scout via `needs_scout` para explorações profundas.
 
 > 📌 **Agent Mode**: Sage runs as a subagent with a pinned model (Opus). It does not respect the user's UI model choice. Opus is selected for deep reasoning and complex planning tasks.
 
@@ -87,27 +87,39 @@ Central planning agent. Uses spec-driven methodology to analyze requirements, pr
 
 **Rationale**: Sage produces architectural decisions, specifications, and task decomposition — all demanding tasks that require deep reasoning, trade-off analysis, and long-context understanding. Opus excels at complex planning, multi-faceted reasoning, and producing coherent long-form content. These planning tasks are bottlenecks (serial, not parallel), so the slower but more capable model is justified. Opus's superior reasoning prevents bad plans that would waste Forge's time.
 
-> ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "ready"` or `status: "needs_scout"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
+> ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "ready"`, `status: "specs_to_write"`, or `status: "needs_scout"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
 ### Access
 
 - Direct: `/plan`, `/spec`, or agent selector
-- Via Herald: Gate G1 → G2
+- Via Herald: Gate G1
 
 ### Spec-Driven Lifecycle
 
-| Scope | Phases |
-|-------|--------|
-| Quick (≤1 file, Herald-produced) | LOAD → SPECIFY → EXECUTE → LEARN |
-| Medium/Large/Complex | LOAD → SPECIFY → DESIGN → TASKS → EXECUTE → LEARN |
+| Scope | Phases | Specs escritos por Sage |
+|-------|--------|------------------------|
+| Quick | LOAD → SPECIFY → EXECUTE → LEARN | `tasks.md` apenas |
+| Medium | LOAD → SPECIFY → DESIGN → TASKS → EXECUTE → LEARN | `spec.md` + `tasks.md` |
+| Large | LOAD → SPECIFY → DESIGN → TASKS → EXECUTE → LEARN | `spec.md` + `design.md` + `tasks.md` |
 
-Core artifacts: `spec.md`, `design.md`, `tasks.md` in `.specs/features/<name>/`
+**Core artifacts:** `spec.md`, `design.md`, `tasks.md` in `.specs/features/<name>/`
+
+**Sage escreve specs direto** — não precisa mais de Forge modo "artifacts_write". Sage cria os arquivos no disco antes de retornar `status: "ready"`.
 
 DDD and RPI models are embedded in SPECIFY and DESIGN phases.
 
+### Explore Capabilities
+
+Sage pode fazer buscas simples diretamente:
+- **Glob** — encontrar arquivos por pattern
+- **Grep** — buscar conteúdo em arquivos
+- **Read** — ler arquivos específicos
+
+Para explorações profundas ou quando contexto é insuficiente, Sage emite `status: "needs_scout"` e Herald delega Scout.
+
 ### Output Format
 
-**After producing artifacts, emit a JSON envelope with status `ready`:**
+**After writing artifacts directly to disk, emit with status `ready`:**
 
 ```json
 {
@@ -120,7 +132,23 @@ DDD and RPI models are embedded in SPECIFY and DESIGN phases.
     "scope": "quick|medium|large",
     "key_decisions": ["string — architectural decision"],
     "task_count": 0,
-    "next_action": "proceed_to_g2"
+    "next_action": "proceed_to_g1"
+  }
+}
+```
+
+**When delegating Forge to write artifacts (large content), emit with status `specs_to_write`:**
+
+```json
+{
+  "agent": "sage",
+  "schema_version": "1.0",
+  "status": "specs_to_write",
+  "payload": {
+    "change_name": "string — feature slug",
+    "artifacts": ["string — target file paths"],
+    "scope": "quick|medium|large",
+    "content": "string — spec content to write (or inline tasks for Quick)"
   }
 }
 ```
@@ -141,7 +169,9 @@ DDD and RPI models are embedded in SPECIFY and DESIGN phases.
 
 **Examples:**
 ```json
-{"agent":"sage","schema_version":"1.0","status":"ready","payload":{"change_name":"add-jwt-auth","artifacts":[".specs/features/add-jwt-auth/spec.md",".specs/features/add-jwt-auth/design.md",".specs/features/add-jwt-auth/tasks.md"],"scope":"medium","key_decisions":["JWT with RS256","Refresh token in httpOnly cookie"],"task_count":12,"next_action":"proceed_to_g2"}}
+{"agent":"sage","schema_version":"1.0","status":"ready","payload":{"change_name":"add-jwt-auth","artifacts":[".specs/features/add-jwt-auth/spec.md",".specs/features/add-jwt-auth/design.md",".specs/features/add-jwt-auth/tasks.md"],"scope":"medium","key_decisions":["JWT with RS256","Refresh token in httpOnly cookie"],"task_count":12,"next_action":"proceed_to_g1"}}
+
+{"agent":"sage","schema_version":"1.0","status":"specs_to_write","payload":{"change_name":"large-refactor","artifacts":[".specs/features/large-refactor/spec.md"],"scope":"large","content":"# Large Refactor\n\n..."}}
 
 {"agent":"sage","schema_version":"1.0","status":"needs_scout","payload":{"topic":"database-schema","reason":"No schema found in initial exploration"}}
 ```
@@ -161,7 +191,7 @@ Sage MUST use Question tool (see [gates.md](gates.md#question-tool-enforcement))
 
 **Mode**: `subagent` | **Model**: `claude-sonnet-4`
 
-Executor. Writes code based on task lists. Never autonomously initiates execution.
+Executor. Writes code based on task lists. Never autonomously initiates execution. **Modo unificado** — sempre lê specs do disco e implementa em uma passagem.
 
 > 📌 **Agent Mode**: Forge runs as a subagent with a pinned model (Sonnet). It does not respect the user's UI model choice. Sonnet is selected for balanced capability and speed in code generation.
 
@@ -171,7 +201,7 @@ Executor. Writes code based on task lists. Never autonomously initiates executio
 
 **Rationale**: Forge executes code generation tasks — writing functions, refactoring, debugging, and testing. These tasks require good code reasoning but not the exhaustive depth of Opus. Sonnet provides a sweet spot: substantially faster than Opus with minimal quality loss for coding tasks. The speed advantage matters because Forge often runs multiple rounds (write → test → refactor) per feature. Sonnet's quality is sufficient for passing tests and code review by Ward and Arbiter.
 
-> ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "complete"`, `"artifacts_written"`, or `"committed"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
+> ⚠️ **Output rule**: Final response MUST be a JSON envelope (`status: "complete"`, `"committed"`, or `"artifacts_written"`). Free-text is invalid. Load `.agents/protocol.md` before responding to confirm the exact schema.
 
 ### Task Context (required)
 
@@ -190,9 +220,30 @@ Two valid forms:
 
 Forge rejects delegations lacking both forms.
 
+### Execution Modes
+
+Forge operates in two modes:
+
+#### Mode A: Unified Execution (default — after G1 approval)
+
+Forge sempre:
+1. Lê specs do disco (conforme scope: tasks.md, ou spec.md+tasks.md, ou spec.md+design.md+tasks.md)
+2. Implementa todas as tasks listadas
+3. Retorna `status: "complete"` com proposed_commit
+
+#### Mode B: ARTIFACTS WRITE MODE (when Sage emits `specs_to_write`)
+
+Triggered when Herald delegates Forge after Sage returns `status: "specs_to_write"`:
+1. Forge recebe spec content no prompt de delegação
+2. Escreve os arquivos especificados em `.specs/features/<name>/`
+3. Retorna `status: "artifacts_written"`
+4. Herald apresenta G1 com os artifacts escritos
+
+**Decision:** Mode A é o fluxo normal. Mode B só quando Sage não consegue escrever direto (content >800 linhas ou contexto próximo do limite).
+
 ### Output Format
 
-**After task completion, emit a JSON envelope with status `complete`:**
+**After task completion, emit with status `complete`:**
 
 ```json
 {
@@ -212,7 +263,7 @@ Forge rejects delegations lacking both forms.
 }
 ```
 
-**After writing artifacts (ARTIFACTS WRITE MODE), emit with status `artifacts_written`:**
+**After writing spec artifacts (Mode B), emit with status `artifacts_written`:**
 
 ```json
 {
@@ -364,7 +415,7 @@ On feature completion (all tasks in tasks.md are marked `[x]`):
 
 **Mode**: `subagent` | **Model**: `claude-haiku-4`
 
-Security reviewer. Operates after Forge implementation, before commit.
+Security reviewer. Operates after Forge implementation, before commit. **Opt-in por default** — só roda se user pedir ou em workflow.
 
 > 📌 **Agent Mode**: Ward runs as a subagent with a pinned model (Haiku). It does not respect the user's UI model choice. Haiku is selected for fast security scanning.
 
@@ -455,7 +506,7 @@ Security reviewer. Operates after Forge implementation, before commit.
 
 **Mode**: `subagent` | **Model**: `claude-sonnet-4`
 
-Code quality reviewer. Operates after Forge implementation, before commit.
+Code quality reviewer. Operates after Forge implementation, before commit. **Opt-in por default** — só roda se user pedir ou em workflow.
 
 > 📌 **Agent Mode**: Arbiter runs as a subagent with a pinned model (Sonnet). It does not respect the user's UI model choice. Sonnet is selected for thorough quality evaluation.
 

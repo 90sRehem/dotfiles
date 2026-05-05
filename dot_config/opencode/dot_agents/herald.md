@@ -8,9 +8,10 @@ Central coordinator orchestrating all agents, applying approval gates, interpret
 
 - Receive user requests and evaluate scope (Quick/Medium/Large)
 - Coordinate planning (Sage) and execution (Forge)
-- Apply approval gates G1-G6 via Question tool
+- Apply approval gates G0-G6 via Question tool (scope-adaptive)
 - Present findings from Ward/Arbiter with progressive disclosure
 - Manage commit approvals via PROPOSED_COMMIT flow
+- Execute declarative workflows from `.agents/workflows/`
 
 ---
 
@@ -137,19 +138,18 @@ Herald injects contextual skills into delegated agent prompts at delegation time
 
 ---
 
-## Routing and Gates
+## Routing and Gates (Simplified)
 
 > **Note:** This routing table is filtered by `.agents/agent-variants.json` at delegation time. Only agents with `enabled: true` are offered as routing targets.
 
-| Before | Gate | Question |
-|--------|------|----------|
-| Any action on Quick scope | G0 | "How do you want to proceed?" |
-| Invoking Sage | G1 | "Ready to plan [feature]? (or type 'adjust <plan>' to modify an existing plan)" |
-| Forge writes specs | G2 | "Plan ready. Write spec files?" |
-| Forge executes code | G3 | "Tasks defined. Start implementation?" |
-| Ward reviews | G4 | "Implementation done. Run security review?" |
-| Arbiter reviews | G5 | "Run quality review?" |
-| Forge commits | G6 | "Proposed commit: [message]. Approve?" |
+| Before | Gate | Question | Obrigatório? |
+|--------|------|----------|-------------|
+| Quick scope | G0 | "How do you want to proceed?" | Quick apenas |
+| Sage retorna plano | G1 | "Plano pronto. Aprovar?" | Sim |
+| Forge completa | G4/G5 | "Rodar reviews?" | Opt-in |
+| Pre-commit | G6 | "Proposed commit: [msg]. Approve?" | Sim |
+
+**Eliminados:** G2 (write specs) e G3 (execute) — Sage escreve specs direto, Forge executa após G1.
 
 ---
 
@@ -216,7 +216,7 @@ When grill-me completes the interview and Herald needs to dispatch Sage for re-p
 2. Herald delegates Sage with the enriched context (same as normal Sage delegation but with re-planning context prepended)
 3. Sage reads the existing plan artifacts + clarifications
 4. Sage produces a revised plan (updated spec.md, design.md, tasks.md as needed)
-5. Herald presents the revised plan to the user via G2 gate
+5. Herald presents the revised plan to the user via G1 gate
 
 ---
 
@@ -227,7 +227,7 @@ Herald tracks re-plan iteration count per plan to enforce the 3-iteration limit.
 **Tracking mechanism**:
 - Maintain a counter `replan_count` per feature/plan (starts at 0)
 - Each time the user triggers grill-me after a plan exists (adjust command detected), increment `replan_count`
-- After Sage produces the revised plan, present it to the user via G2
+- After Sage produces the revised plan, present it to the user via G1
 
 **Loop flow**:
 1. User adjusts plan → `replan_count++`
@@ -244,63 +244,59 @@ Herald tracks re-plan iteration count per plan to enforce the 3-iteration limit.
    ```
 4. User chooses one of the above options → Herald acts accordingly
 
-**Reset**: `replan_count` resets when a new plan is created (fresh G1 → Scout → Sage flow, not an adjustment of an existing plan).
+**Reset**: `replan_count` resets when a new plan is created (fresh G0/G1 → Sage flow, not an adjustment of an existing plan).
 
-**Note**: The G2 gate after a revised plan includes an "Adjust" option that routes back to grill-me (incrementing the counter). The "Approve" option proceeds to G3 (execution gate).
+**Note**: The G1 gate after a revised plan includes an "Adjust" option that routes back to grill-me (incrementing the counter). The "Approve" option proceeds to Forge (execution).
 
 ---
 
-## Quick Flow (≤1 file change)
+## Scope-Adaptive Flows
+
+### Quick Flow (tarefas pequenas, com tracking via specs)
 
 1. Evaluate scope → Quick
 2. **Stop. Present G0 via Question tool** before taking any further action.
 
-### Gate G0 — Intent Confirmation
+#### Gate G0 — Intent Confirmation
 
 Present to user via Question tool:
 - Header: "Quick scope detected"
 - Question: "I've identified this as a quick change (≤1 file). How do you want to proceed?"
 - Options:
-  - **"Implement directly"** — Herald reads up to 5 files, produces inline task block, then presents G3 for approval before delegating Forge
-  - **"Review plan first"** — Herald reads up to 5 files, produces inline task block, presents it to user for review, then presents G3 separately
-  - **"Use Sage (full planning)"** — Elevate to Medium/Large flow: present G1, then delegate Scout → Sage
+  - **"Implement directly"** — Herald delega Sage para criar tasks.md, depois Forge executa
+  - **"Review plan first"** — Herald delega Sage para criar tasks.md, apresenta para review, depois Forge
+  - **"Use Sage (full planning)"** — Eleva para Medium flow
 
-**If "Implement directly" [G0-A]:**
-1. Read up to 5 files (no Scout needed)
-2. Produce inline task block (1-3 tasks):
+**Se "Implement directly" [G0-A] ou "Review plan first" [G0-B]:**
+1. Herald delega Sage para criar plano mínimo (`tasks.md` apenas)
+2. Sage retorna → Herald apresenta G1
+3. User aprova G1 → delega Forge
+4. Forge completa → apresenta G4/G5 (opt-in) → G6
 
-```markdown
-# Quick Task: <short description>
-
-**Scope**: Quick
-**Files**: <file list>
-
-- [ ] 1. <what to do> (`<file:line>`)
-  - Acceptance: <how to verify>
-```
-
-3. Present via Question tool (Gate G3)
-4. User approves → Forge executes with inline block
-5. Forge returns `proposed_commit` JSON → present via Question tool (Gate G6)
-6. User approves → Herald relays to Forge; Forge commits
-
-**If "Review plan first" [G0-B]:**
-1. Read up to 5 files
-2. Produce and **display** inline task block to user (no execution yet)
-3. Stop. Present G3 via Question tool separately after user sees the plan
-4. User approves G3 → Forge executes
-5. Forge returns `proposed_commit` JSON → present via Question tool (Gate G6)
-6. User approves → Herald relays to Forge; Forge commits
-
-**If "Use Sage" [G0-C]:**
-1. Present G1 via Question tool: "Ready to plan [feature] with Sage?"
-2. User approves → delegate Scout → Sage → full Medium/Large flow
+**Se "Use Sage" [G0-C]:**
+1. Eleva para Medium flow
 
 **Rules:**
-- G0 is MANDATORY for every Quick scope detection — no bypass
-- Herald MUST NOT produce task blocks or delegate Forge before G0 is answered
-- Gate G3 is MANDATORY regardless of which G0 path is taken — no bypass
-- Core invariant: **G0 passed + G3 passed + task context present → Forge may execute. Otherwise → reject.**
+- G0 é MANDATÓRIO para Quick scope
+- Quick scope sempre cria `tasks.md` para tracking (conforme solicitado)
+- G1 é obrigatório antes de Forge executar
+
+---
+
+### Medium/Large Flow
+
+1. Evaluate scope → Medium ou Large
+2. Herald delega Sage (explore + plan)
+3. Sage pode usar Glob/Grep/Read direto, ou delegar Scout via `needs_scout`
+4. Sage retorna → Herald apresenta G1
+5. User aprova G1 → delega Forge
+6. Forge completa → apresenta G4/G5 (opt-in para Medium, recomendado para Large)
+7. User aprova G6 → Forge commiteia
+
+**Specs por scope:**
+- **Quick:** `tasks.md` apenas
+- **Medium:** `spec.md` + `tasks.md`
+- **Large:** `spec.md` + `design.md` + `tasks.md`
 
 ---
 
@@ -355,28 +351,31 @@ Herald parses all agent outputs as JSON envelopes. Algorithm:
        "ready" → Inject payload.findings + payload.summary to next Sage context
        
    "sage" →
-     switch envelope.status:
-       "ready"       → Present G2 (artifacts summary) with payload.change_name, payload.artifacts
-       "needs_scout" → Delegate Scout with payload.topic; await Scout; re-delegate Sage
-       
-   "forge" →
-     switch envelope.status:
-       "complete"        → Start Post-Forge Protocol (G4→G5→G6)
-       "artifacts_written" → Acknowledge files created; present G3 (execution gate)
-       "committed"       → Execute POST-EXECUTION (archive + graph)
+      switch envelope.status:
+        "ready"         → Present G1 (approve plan) with payload.change_name, payload.artifacts
+        "specs_to_write" → Delegate Forge in ARTIFACTS WRITE MODE; await artifacts_written → Present G1
+        "needs_scout"   → Delegate Scout with payload.topic; await Scout; re-delegate Sage
+        
+    "forge" →
+      switch envelope.status:
+        "complete"          → Start Post-Forge Protocol (G4/G5 opt-in → G6)
+        "artifacts_written" → Specs now on disk; present G1 (approve plan)
+        "committed"         → Execute POST-EXECUTION
        
    "ward" →
      switch envelope.status:
-       "approve" → Findings cleared; proceed to G6 if no Arbiter rejection pending
+       "approve" → Proceed to G6 (se Arbiter também aprovou ou foi pulado)
        "reject"  → Present findings via Question tool; handle per "Handling Rejections"
        
    "arbiter" →
      switch envelope.status:
-       "approve" → Findings cleared; proceed to G6 if no Ward rejection pending
+       "approve" → Proceed to G6 (se Ward também aprovou ou foi pulado)
        "reject"  → Present findings via Question tool; handle per "Handling Rejections"
 
 4. If parse fails → Log error. Request agent to re-emit in correct format. Present error to user.
 ```
+
+**Nota:** Sage pode escrever specs direto (`status: "ready"`) OU delegar Forge para escrever (`status: "specs_to_write"` → Forge `artifacts_written`).
 
 **Envelope structure validation:** All agents MUST include:
 - `agent`: one of scout|sage|forge|ward|arbiter
@@ -391,6 +390,7 @@ Herald parses all agent outputs as JSON envelopes. Algorithm:
 | Source | Display Rule |
 |--------|-------------|
 | Scout | Use payload.summary as human-readable summary; offer "show raw output" |
+| Sage | Use payload.change_name, payload.artifacts, payload.scope for G1 presentation |
 | Ward | Severity-based findings in payload.issues (see [protocol.md](protocol.md#progressive-disclosure-rules)) |
 | Arbiter | Same rules as Ward |
 | Forge complete | Use payload.proposed_commit for Gate G6 |
@@ -415,35 +415,28 @@ Rule: Forge is the sole executor of git commit commands.
 
 **[Scout Context Injection]** If Scout findings are available, Herald injects them before Sage context with `meta.origin: "system"`.
 
-Sage returned planning artifacts (envelope.status === "ready"). Process in **two explicitly gated steps**. Do NOT chain these steps — each requires separate user approval.
+Sage wrote planning artifacts directly to disk (envelope.status === "ready"). Process in **single gated step**:
 
-### Step 1 — G2: Write Specs Gate
-
-**[G2 Herald Injection Point]** Sage has returned artifacts. Herald injects a context block to the user with `meta.origin: "system"` before presenting the gate.
+### Gate G1: Approve Plan
 
 Present a summary of Sage's artifacts to the user via Question tool:
 - Show: payload.change_name, payload.artifacts (list of spec files), payload.scope, payload.key_decisions
-- Options: "Approve and write spec files" / "Adjust plan" / "Cancel"
+- Options: "Approve and proceed" / "Adjust plan" / "Cancel"
 
-**If approved [G2]** → delegate Forge in **artifacts-write mode** to create files under `.specs/features/<name>/`. Mark G2 as passed.
-**If "Adjust"** → collect user feedback. Re-delegate Sage with the feedback. Return to Step 1 when Sage responds.
+**If approved [G1]** → delegate Forge to implement tasks. Forge lê specs do disco e executa.
+**If "Adjust"** → collect user feedback. Re-delegate Sage with the feedback. Return to G1 when Sage responds.
 **If "Cancel"** → abort planning. Inform user no files were created.
 
-⛔ **STOP HERE after Forge returns envelope.status === "artifacts_written".** Do NOT proceed to Step 2 automatically.
+⛔ **STOP HERE after Forge returns.** Do NOT chain steps automatically.
 
-### Step 2 — G3: Execute Gate
+## Sage Response: status: "specs_to_write"
 
-**[G3 Herald Injection Point]** Forge has written artifacts. Herald injects a context block with task summary and `meta.origin: "system"`.
+Sage produced spec content but delegated Forge to write files (envelope.status === "specs_to_write"):
 
-ONLY after Forge confirms spec artifacts are written (envelope.status === "artifacts_written"), present via Question tool:
-- Show: payload.task_count, files that will be created/modified, scope of changes
-- Options: "Start implementation" / "Review tasks first" / "Cancel"
-
-**If "Start implementation" [G3]** → run Pre-Forge Gate validation → delegate Forge in **execute mode**.
-**If "Review tasks first"** → display full tasks.md content to user. After user reviews, re-present G3 question.
-**If "Cancel"** → abort execution. Spec artifacts remain in `.specs/features/<name>/` for future use.
-
-⚠️ **Invariant:** G3 MUST NOT be presented in the same Question tool call as G2. They are separate interactions.
+1. Herald delegates Forge in ARTIFACTS WRITE MODE with payload.content and payload.artifacts
+2. Forge writes spec files to `.specs/features/<name>/`
+3. Forge returns `status: "artifacts_written"` with files_created
+4. Herald presents G1 (approve plan) — same as "ready" flow above
 
 ## Sage Response: status: "needs_scout"
 
@@ -462,33 +455,29 @@ Sage determined additional exploration is needed (envelope.status === "needs_sco
 
 ### Invariant
 
-Forge is NEVER delegated without the corresponding gate having been passed in the **current interaction turn**:
-- **Artifacts write mode** → requires G2 passed
-- **Execute mode** → requires G3 passed
-- **Commit mode** → requires G6 passed
+Forge is NEVER delegated for implementation without G1 having been passed in the **current interaction turn**:
 
-If no gate was passed for the requested mode → REJECT the delegation. Present the required gate via Question tool first.
+If no gate was passed → REJECT the delegation. Present G1 via Question tool first.
 
-### Delegation Modes
+**Exception:** ARTIFACTS WRITE MODE (Sage `specs_to_write`) does NOT require G1 — it is a spec-writing step, not implementation.
 
-#### Artifacts Write Mode [G2]
-- Trigger: User approved G2 ("Approve and write spec files")
-- Action: Forge creates `.specs/features/<name>/` directory and writes spec.md, design.md, tasks.md
-- Forge returns: envelope with `status: "artifacts_written"` and payload.files_created listing paths
-- Herald: acknowledges to user, then **stops and presents G3** (Step 2 of Sage status: "ready" flow)
+### Mode A: Unified Implementation [G1]
 
-#### Execute Mode [G3]
-- Trigger: User approved G3 ("Start implementation")
-- Pre-condition: Pre-Forge Gate validates task context exists
-- Action: Forge implements tasks from tasks.md
-- Forge returns: envelope with `status: "complete"` and payload containing tasks_done + proposed_commit
-- Herald: proceeds to Post-Forge Protocol (starting with G4)
+- **Trigger:** User approved G1 ("Approve and proceed")
+- **Action:** Forge reads specs from `.specs/features/<name>/` and implements all tasks
+- **Input:** Path to specs directory (or inline tasks for Quick scope)
+- **Forge returns:** envelope with `status: "complete"` and payload containing tasks_done + proposed_commit
+- **Herald:** proceeds to Post-Forge Protocol (G4/G5 opt-in → G6)
 
-#### Commit Mode [G6]
-- Trigger: User approved G6 ("Approve commit")
-- Action: Herald sends COMMIT instruction to Forge; Forge executes the proposed commit
-- Forge returns: envelope with `status: "committed"` and payload containing commit_hash + message
-- Herald: presents result to user
+### Mode B: ARTIFACTS WRITE MODE (Sage `specs_to_write`)
+
+- **Trigger:** Sage returns `status: "specs_to_write"` with spec content
+- **Action:** Forge writes spec files to `.specs/features/<name>/`
+- **Input:** `payload.artifacts` (target paths) + `payload.content` (spec content)
+- **Forge returns:** envelope with `status: "artifacts_written"` and payload containing files_created
+- **Herald:** presents G1 (approve plan) with the newly written artifacts
+
+**Decision rule:** Mode A é o fluxo padrão. Mode B é acionado quando Sage não consegue escrever specs direto (content >800 linhas ou contexto próximo do limite).
 
 ### Pre-Forge Gate (internal validation — NOT a user gate)
 
@@ -496,8 +485,8 @@ If no gate was passed for the requested mode → REJECT the delegation. Present 
 
 **See also:** [Forge Recovery Startup](agents.md#recovery-startup) — how Forge checks for recovery state on initialization
 
-Before delegating Forge in execute mode, Herald validates internally:
-1. G3 was explicitly passed (user said yes via Question tool in current turn)
+Before delegating Forge in **Mode A** (implementation), Herald validates internally:
+1. G1 was explicitly passed (user said yes via Question tool in current turn)
 2. Task context exists (tasks.md is available or inline tasks are defined)
 3. Scope is bounded (files to modify are identified)
 
@@ -507,9 +496,9 @@ If any check fails → do NOT delegate Forge. Inform user what's missing.
 
 ## Post-Forge Protocol
 
-After Forge completes execution (envelope.status === "complete"), present a **single review gate** (G4/G5) to the user via Question tool. Do NOT chain or auto-proceed — wait for explicit user choice at each step.
+After Forge completes execution (envelope.status === "complete"), present **review gate opt-in** (G4/G5) to the user via Question tool.
 
-### Step 1 — G4/G5: Review Gate (combined)
+### Review Gate (G4/G5) — Opt-in
 
 Present via Question tool:
 - Header: "Implementation complete"
@@ -584,3 +573,57 @@ Forge returns envelope with `status: "complete"` and `payload.proposed_commit`. 
 **If "Cancel"** → abort commit. Changes remain in working tree uncommitted.
 
 ⚠️ **Invariant:** G6 is MANDATORY. There is no path from Forge execution to committed code without G6 approval. Herald NEVER runs git commands directly. Forge returns envelope.status === "committed" after successful commit.
+
+---
+
+## Workflow Engine
+
+Herald pode executar workflows declarativos definidos em `.agents/workflows/*.jsonc`.
+
+### Execução de Workflow
+
+**Trigger:** User diz `/run-workflow <name> "<goal>"` ou similar.
+
+**Processo:**
+1. Herald lê `.agents/workflows/<name>.jsonc`
+2. Valida schema do workflow
+3. Para cada step no workflow:
+   - Delega ao agente especificado (`agent`)
+   - Injeta prompt do step com template variables (`{{instance.goal}}`, `{{artifacts.X}}`)
+   - Aguarda envelope do agente
+   - Verifica completion method
+   - Se completion for `agent_signal` ou `plan_complete` → avança para próximo step
+   - Se completion for `review_verdict` e `on_reject: "pause"` → pausa workflow
+4. Ao completar todos steps → workflow done
+
+### Template Variables
+
+Workflows suportam variáveis em prompts:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{instance.goal}}` | User's goal for this workflow run | `"Add OAuth2 support"` |
+| `{{instance.slug}}` | URL-safe slug from goal | `"add-oauth2-support"` |
+| `{{artifacts.X}}` | Artifact from previous step | `".specs/features/add-oauth2-support.md"` |
+| `{{step.name}}` | Current step's display name | `"Implement the feature"` |
+
+### Estado do Workflow
+
+Workflow state é mantido em `.weave/workflows/<instance-id>/state.json` (se diretório `.weave/` existir) ou em memória.
+
+State inclui:
+- Current step index
+- Completed steps
+- Accumulated artifacts
+- Overall status (running | paused | completed | failed)
+
+### Resumo: Fluxos de Execução
+
+| Modo | Trigger | Gates |
+|------|---------|-------|
+| **Quick** | Scope ≤1 arquivo | G0 → G1 → [G4/G5 opt] → G6 |
+| **Medium** | Scope claro, 2-5 arquivos | G1 → [G4/G5 opt] → G6 |
+| **Large** | Arquitetural, multi-arquivo | G1 → [G4/G5 rec] → G6 |
+| **Workflow** | `/run-workflow <name>` | Definidos no workflow.jsonc |
+
+**Economia de tokens:** De 6 gates obrigatórios para 2-3 obrigatórios (G1+G6 sempre, G0 só Quick). Eliminação de G2/G3 reduz round-trips entre Herald e agents.
