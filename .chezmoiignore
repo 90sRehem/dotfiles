@@ -6,7 +6,6 @@ LICENSE
 .config/hypr
 .config/waybar
 .config/kitty
-.config/tmux
 .config/systemd
 .config/splashscreens
 .config/xdg-desktop-portal
@@ -18,4 +17,6 @@ packages_explicit.txt
 # Mac-only: ignore on non-Mac
 .aerospace.toml
 .config/sketchybar
+# Ghostty no Linux continua usando o tema dinâmico do omarchy (não gerenciado)
+.config/ghostty
 {{- end }}

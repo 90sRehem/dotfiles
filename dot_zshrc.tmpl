@@ -46,9 +46,8 @@ eval "$(tmuxifier init -)"
 # ============================================================================
 
 {{- if eq .chezmoi.os "darwin" }}
-# eval "$(oh-my-posh init zsh --config ~/.config/omp/themes/catppuccin.omp.json)"
-eval "$(oh-my-posh init zsh --config ~/.config/omp/themes/bubblesline.omp.json)"
-# eval "$(oh-my-posh init zsh)"
+# Oh My Posh — Catppuccin (tema estático gerenciado no chezmoi)
+eval "$(oh-my-posh init zsh --config ~/.config/omp/themes/catppuccin.omp.json)"
 {{- else }}
 # Initialize Oh My Posh with Catppuccin theme
 # Oh My Posh provides a customizable and fast prompt
@@ -117,6 +116,12 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+# Mise (Runtime Version Manager)
+if command -v mise &> /dev/null; then
+  eval "$(mise activate zsh)"
+  export PATH="$HOME/.local/share/mise/shims:$PATH"
+fi
 {{- else }}
 # ============================================================================
 # LINUX-SPECIFIC DEVELOPMENT TOOLS

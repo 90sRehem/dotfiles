@@ -49,127 +49,71 @@
             "home_icon": "~",
             "style": "agnoster_short"
           },
-          "template": " {{ .Path }}",
-          "foreground": "p:text",
+          "template": " \uf07c {{ .Path }}",
+          "foreground": "p:wight",
           "powerline_symbol": "\ue0b4",
-          "background": "p:pink",
+          "background": "p:lavender",
           "type": "path",
           "style": "powerline"
         },
         {
           "properties": {
-            "branch_icon": "\ue725 ",
-            "cache_duration": "none",
-            "cherry_pick_icon": "\ue29b ",
-            "commit_icon": "\uf417 ",
-            "fetch_status": false,
-            "fetch_upstream_icon": false,
-            "merge_icon": "\ue727 ",
-            "no_commits_icon": "\uf0c3 ",
-            "rebase_icon": "\ue728 ",
-            "revert_icon": "\uf0e2 ",
-            "tag_icon": "\uf412 "
+            "cache_duration": "none"
           },
           "template": " {{ .HEAD }}",
-          "foreground": "p:text",
+          "foreground": "p:wight",
           "powerline_symbol": "\ue0b4",
-          "background": "p:lavender",
+          "background": "p:teal",
           "type": "git",
           "style": "powerline"
+        },
+        {
+          "properties": {
+            "cache_duration": "none",
+            "enabled": false
+          },
+          "template": " \uf2e7 {{ .Full }}",
+          "foreground": "p:wight",
+          "powerline_symbol": "\ue0b4",
+          "background": "p:green",
+          "type": "node",
+          "style": "powerline"
+        },
+        {
+          "properties": {
+            "cache_duration": "none",
+            "enabled": false
+          },
+          "template": " \ue235 {{ .Full }}",
+          "foreground": "p:wight",
+          "powerline_symbol": "\ue0b4",
+          "background": "p:yellow",
+          "type": "python",
+          "style": "powerline"
         }
-      ]
+      ],
+      "newline": true
     },
     {
       "type": "prompt",
-      "alignment": "right",
+      "alignment": "left",
       "segments": [
         {
           "properties": {
-            "cache_duration": "5m"
+            "always_enabled": true,
+            "error_threshold": 0,
+            "success_threshold": 0
           },
-          "template": " \ue718 {{ .Full }} ",
-          "foreground": "p:text",
-          "background": "p:green",
-          "leading_diamond": "\ue0b6",
-          "type": "node",
-          "style": "diamond"
-        },
-        {
-          "properties": {
-            "cache_duration": "5m"
-          },
-          "template": " \ue73c {{ .Full }} ",
-          "foreground": "p:text",
-          "background": "p:yellow",
-          "leading_diamond": "\ue0b6",
-          "type": "python",
-          "style": "diamond"
-        },
-        {
-          "properties": {
-            "cache_duration": "5m"
-          },
-          "template": " \uf489 {{ .Full }} ",
-          "foreground": "p:text",
+          "template": "\ue0b4",
+          "foreground": "p:red",
           "background": "p:orange",
-          "leading_diamond": "\ue0b6",
-          "type": "go",
-          "style": "diamond"
-        },
-        {
-          "properties": {
-            "cache_duration": "5m"
-          },
-          "template": " \ue7a8 {{ .Full }} ",
-          "foreground": "p:text",
-          "background": "p:purple",
-          "leading_diamond": "\ue0b6",
-          "type": "rust",
-          "style": "diamond"
-        },
-        {
-          "properties": {
-            "cache_duration": "2m",
-            "branch_icon": "\ue725 ",
-            "fetch_status": false,
-            "fetch_upstream_icon": false
-          },
-          "template": " {{ .HEAD }}{{ if .Working.Changed }} *{{ .Working.Changed }}{{ end }}{{ if .Staging.Changed }} +{{ .Staging.Changed }}{{ end }} ",
-          "foreground": "p:text",
-          "background": "p:lavender",
-          "leading_diamond": "\ue0b6",
-          "type": "git",
-          "style": "diamond"
-        },
-        {
-          "properties": {
-            "cache_duration": "1m",
-            "command": "date +%H:%M"
-          },
-          "template": " \uf017 {{ .Output }} ",
-          "foreground": "p:text",
-          "background": "p:teal",
-          "leading_diamond": "\ue0b6",
-          "type": "command",
-          "style": "diamond"
-        },
-        {
-          "properties": {
-            "cache_duration": "none"
-          },
-          "template": "{{ if .Env.VI_MODE }}{{ if eq .Env.VI_MODE \"NORMAL\" }} NORMAL {{ else if eq .Env.VI_MODE \"VISUAL\" }} VISUAL {{ else if eq .Env.VI_MODE \"V-LINE\" }} V-LINE {{ else if eq .Env.VI_MODE \"REPLACE\" }} REPLACE {{ else }} INSERT {{ end }}{{ else }} INSERT {{ end }}",
-          "foreground": "#1E1E2E",
-          "background_templates": [
-            "{{ if eq .Env.VI_MODE \"NORMAL\" }}#F38BA8{{ else if eq .Env.VI_MODE \"VISUAL\" }}#FAB387{{ else if eq .Env.VI_MODE \"V-LINE\" }}#FAB387{{ else if eq .Env.VI_MODE \"REPLACE\" }}#F9E2AF{{ else }}#A6E3A1{{ end }}"
-          ],
-          "leading_diamond": "\ue0b6",
-          "trailing_diamond": "\ue0b4",
-          "type": "text",
+          "type": "exit",
           "style": "diamond"
         }
-      ]
+      ],
+      "newline": true
     }
   ],
-  "version": 3,
-  "final_space": true
+  "final_space": true,
+  "version": 2
 }

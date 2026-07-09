@@ -2,9 +2,11 @@ return {
   "tris203/precognition.nvim",
   --event = "VeryLazy",
   opts = {
-    -- startVisible = true,
-    -- showBlankVirtLine = true,
-    -- highlightColor = { link = "Comment" },
+    startVisible = true,
+    showBlankVirtLine = true,
+    highlightColor = { link = "Comment" },
+    targetedMotionHints = { enabled = false },
+    disabled_fts = { "startify", "help", "qf", "lazy", "mason" },
     -- hints = {
     --      Caret = { text = "^", prio = 2 },
     --      Dollar = { text = "$", prio = 1 },

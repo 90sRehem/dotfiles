@@ -22,3 +22,23 @@ vim.api.nvim_create_autocmd({ "FileChangedShellPost" }, {
     vim.cmd("checktime " .. args.buf)
   end,
 })
+
+-- Force omarchy theme after startup (overrides session restore)
+vim.api.nvim_create_autocmd("User", {
+  pattern = "LazySync",
+  group = vim.api.nvim_create_augroup("omarchy_theme", {}),
+  callback = function()
+    local omarchy_theme = vim.fn.expand("~/.config/omarchy/current/theme/neovim.lua")
+    if vim.fn.filereadable(omarchy_theme) == 1 then
+      local f = io.open(omarchy_theme, "r")
+      if f then
+        local content = f:read("*a")
+        f:close()
+        for cs in content:gmatch('colorscheme%s*=%s*"([^"]+)"') do
+          vim.cmd.colorscheme(cs)
+          return
+        end
+      end
+    end
+  end,
+})

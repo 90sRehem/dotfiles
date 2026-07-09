@@ -9,9 +9,12 @@ if ! command -v brew &>/dev/null; then
   eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
-brew install neovim gh bun zsh starship opencode
+brew install neovim gh bun zsh starship opencode \
+  tmux oh-my-posh fzf eza bat fd ripgrep zoxide yazi \
+  lazygit lazydocker zinit mise node pnpm yarn tmuxifier
 
 brew install --cask nikitabobko/tap/aerospace
+brew install --cask ghostty
 brew install --cask font-jetbrains-mono-nerd-font
 
 echo "✓ macOS dependencies installed"

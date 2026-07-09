@@ -51,6 +51,58 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 
 ---
 
+## Agent Definitions
+
+Agent definitions are in `agents/` (plural directory, official standard):
+
+| Agent | File | Mode | Model |
+|-------|------|------|-------|
+| Herald | `agents/herald.md` | primary | opencode-go/qwen3.6-plus |
+| Scout | `agents/scout.md` | subagent | opencode-go/deepseek-v4-flash |
+| Sage | `agents/sage.md` | subagent | opencode-go/deepseek-v4-pro |
+| Forge | `agents/forge.md` | subagent | opencode-go/qwen3.6-plus |
+| Ward | `agents/ward.md` | subagent | opencode-go/minimax-m2.7 |
+| Arbiter | `agents/arbiter.md` | subagent | opencode-go/qwen3.6-plus |
+
+**Key changes from previous version:**
+- Directory renamed from `agent/` to `agents/` (plural, official standard)
+- Sage can now delegate Forge (for writing large specs) and Scout (for more context)
+- Forge loads skills via frontmatter discovery (no hardcoded registry)
+- Scout returns `recommended_skills[]` in JSON envelope
+- Large scope: G4 (Ward) + G5 (Arbiter) are mandatory, not opt-in
+
+---
+
+## Skill Discovery
+
+Skills are discovered via frontmatter in `skills/<name>/SKILL.md`. There is no hardcoded registry.
+
+### Core Skills
+
+| Skill | Description | Target Agents |
+|-------|-------------|---------------|
+| `spec-driven` | Planning methodology (LOAD → SPECIFY → DESIGN → TASKS) | sage, forge |
+| `docs-writer` | Documentation writing standards | sage, forge |
+| `exploration-protocol` | Graph-first exploration methodology | scout |
+| `grill-me` | Interview user about plan changes (command-triggered) | herald |
+
+Scout reads skill frontmatter during exploration and returns `recommended_skills[]` in its JSON envelope.
+
+---
+
+## Workflows
+
+Available workflows in `.agents/workflows/`:
+
+| Workflow | Scope | Steps | Mandatory Gates |
+|----------|-------|-------|----------------|
+| `bugfix` | medium | Scout → Sage → Forge | G1, G6 |
+| `refactor` | medium | Sage → Forge → Arbiter | G1, G4, G6 |
+| `hotfix` | quick | Forge | G0, G6 |
+| `new-project` | large | Scout → Sage → Forge → Ward → Arbiter | G1, G4, G5, G6 |
+
+---
+
 ## Integrations
 
 **graphify** — knowledge graph at `graphify-out/`
@@ -67,7 +119,7 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 **SESSION_LOG.md** — append-only execution audit trail
 - Location: working directory root
 - Herald appends `started` before delegation, `completed`/`failed`/`skipped` after
-- Enables recovery from interruptions; see [Herald recovery protocol](.agents/herald.md#recovery-after-interruption)
+- Enables recovery from interruptions; see [Herald recovery protocol](agents/herald.md#recovery-after-interruption)
 
 ---
 
@@ -75,7 +127,6 @@ The context monitor hook is nullable — if disabled, monitoring has no effect. 
 
 - [JSON Inter-Agent Protocol](.agents/protocol.md) — schemas, progressive disclosure
 - [Approval Gate System](.agents/gates.md) — G1-G6, Question tool enforcement
-- [Herald](.agents/herald.md) — routing, quick flow, commit flow
-- [Agent Definitions](.agents/agents.md) — Scout, Sage, Forge, Ward, Arbiter
-
-
+- [Herald](agents/herald.md) — routing, quick flow, commit flow
+- [Agent Definitions](agents/) — individual agent markdown files
+- [Full Flow Architecture](OPENCODE-FLOW.md) — complete system reference

@@ -58,8 +58,8 @@ Before ANY Quick scope action:
    - Header: "Quick scope detected"
    - Question: "I've identified this as a quick change (≤1 file). How do you want to proceed?"
    - Options:
-     - "Implement directly" — Herald produces inline task block, then presents G3 for approval before delegating Forge
-     - "Review plan first" — Herald produces inline task block, presents it to user, then presents G3 separately
+     - "Implement directly" — Herald writes task.md to `.specs/quick/<slug>/`, then presents G3 for approval before delegating Forge
+     - "Review plan first" — Herald writes task.md to `.specs/quick/<slug>/`, presents it to user, then presents G3 separately
      - "Use Sage (full planning)" — Elevate to Medium/Large flow: present G1, then delegate Scout → Sage
 2. Wait for user response
 3. Only after G0 is passed → proceed with chosen path
