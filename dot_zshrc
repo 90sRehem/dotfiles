@@ -1,0 +1,476 @@
+# ============================================================================
+# ZSH CONFIGURATION - organized by concern, single file
+# Sections: guard > completions > omarchy > env/path > history/options >
+#           plugins > tool hooks > dev environments > ssh agent >
+#           aliases (fs/tmux/git/docker/dev/chezmoi/pkg) > functions >
+#           help > local
+# Machine-specific values live in ~/.zshrc.local (never tracked).
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 0. GUARD - nothing below runs for non-interactive shells
+# ----------------------------------------------------------------------------
+[[ $- != *i* ]] && return
+
+# ----------------------------------------------------------------------------
+# 1. COMPLETIONS
+# ----------------------------------------------------------------------------
+fpath=("$HOME/.zsh/completions" "$HOME/.docker/completions" $fpath)
+autoload -Uz compinit && compinit
+
+# ----------------------------------------------------------------------------
+# 2. OMARCHY SHELL INTEGRATION
+# ----------------------------------------------------------------------------
+[[ -f /usr/share/omarchy-zsh/shell/zoptions ]] && source /usr/share/omarchy-zsh/shell/zoptions
+[[ -f /usr/share/omarchy-zsh/shell/all ]] && source /usr/share/omarchy-zsh/shell/all
+
+# ----------------------------------------------------------------------------
+# 3. ENVIRONMENT & PATH
+# ----------------------------------------------------------------------------
+export PATH="$HOME/.local/bin:$PATH"
+export EDITOR="nvim"
+export SUDO_EDITOR="$EDITOR"
+
+# Android SDK and development environment
+export JAVA_HOME=/opt/android-studio/jbr
+export ANDROID_HOME=$HOME/Android/Sdk
+export ANDROID_AVD_HOME="$HOME/.config/.android/avd"
+export PATH="$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools"
+
+# pnpm
+export PNPM_HOME="$HOME/.local/share/pnpm"
+case ":$PATH:" in *":$PNPM_HOME:"*) ;; *) export PATH="$PNPM_HOME:$PATH" ;; esac
+
+# LM Studio CLI
+export PATH="$PATH:$HOME/.lmstudio/bin"
+
+# opencode CLI
+export PATH="$HOME/.opencode/bin:$PATH"
+
+# Cargo bin (workmux and other tools)
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# tmuxifier
+export PATH="$HOME/.config/tmux/plugins/tmuxifier/bin:$PATH"
+
+# opentmux wrapper: `opencode` runs inside tmux; use `oc` for the raw binary.
+# The spawn wrapper is also available via `spawn` in PATH.
+export OPENCODE_PORT=4096
+alias opencode='opencode-tmux'
+
+# ----------------------------------------------------------------------------
+# 4. HISTORY & OPTIONS
+# ----------------------------------------------------------------------------
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY   # share history across sessions
+setopt autocd          # cd by typing the directory name
+bindkey -v             # vi key bindings
+
+# ----------------------------------------------------------------------------
+# 5. PLUGIN MANAGER (zinit)
+# ----------------------------------------------------------------------------
+if [[ ! -f $HOME/.local/share/zinit/zinit.git/zinit.zsh ]]; then
+  print -P "%F{33} %F{220}Installing %F{33}zdharma-continuum/zinit%f{220}…%f"
+  command mkdir -p "$HOME/.local/share/zinit" && command chmod g-rwX "$HOME/.local/share/zinit"
+  command git clone https://github.com/zdharma-continuum/zinit "$HOME/.local/share/zinit/zinit.git" &&
+    print -P "%F{33} %F{34}Installation successful.%f%b" ||
+    print -P "%F{160} The clone has failed.%f%b"
+fi
+source "$HOME/.local/share/zinit/zinit.git/zinit.zsh"
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+zinit load zdharma-continuum/history-search-multi-word
+zstyle ':completion:*' menu no
+zinit light Aloxaf/fzf-tab
+zinit light zsh-users/zsh-autosuggestions
+zinit light zdharma-continuum/fast-syntax-highlighting   # keep last: wraps zle
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-history-substring-search
+zinit light MichaelAquilina/zsh-you-should-use           # reminds you of existing aliases
+zinit light djui/alias-tips                              # suggests aliases as you type
+zinit light hlissner/zsh-autopair                        # auto-close brackets/quotes
+
+# fzf-tab previews
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always $realpath'
+
+# fzf default options
+export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
+
+# ----------------------------------------------------------------------------
+# 6. TOOL HOOKS (eval-based CLIs)
+# ----------------------------------------------------------------------------
+
+# Mise (runtime version manager)
+if command -v mise &> /dev/null; then
+  eval "$(mise activate zsh)"
+  export PATH="$HOME/.local/share/mise/shims:$PATH"
+fi
+
+# Zoxide (smart directory navigation)
+if command -v zoxide &> /dev/null; then
+  eval "$(zoxide init zsh)"
+fi
+
+# Oh My Posh prompt with Omarchy-synced theme + live reload on theme change
+eval "$(oh-my-posh init zsh --config ~/.config/omp/themes/omarchy-current.omp.json)"
+typeset -g OMARCHY_THEME_FILE="$HOME/.config/omarchy/current/theme.name"
+typeset -g OMARCHY_THEME_LAST=""
+_omarchy_reload_prompt_if_theme_changed() {
+  [[ -f "$OMARCHY_THEME_FILE" ]] || return
+  local current_theme
+  current_theme=$(<"$OMARCHY_THEME_FILE")
+  current_theme=${current_theme//[[:space:]]/}
+  [[ -n "$current_theme" ]] || return
+  [[ "$current_theme" == "$OMARCHY_THEME_LAST" ]] && return
+  if [[ -x "$HOME/.local/bin/omarchy-zsh-hook" ]]; then
+    "$HOME/.local/bin/omarchy-zsh-hook" "$current_theme" >/dev/null 2>&1 || true
+  fi
+  eval "$(oh-my-posh init zsh --config ~/.config/omp/themes/omarchy-current.omp.json)"
+  OMARCHY_THEME_LAST="$current_theme"
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook -d precmd _omarchy_reload_prompt_if_theme_changed 2>/dev/null || true
+add-zsh-hook precmd _omarchy_reload_prompt_if_theme_changed
+_omarchy_reload_prompt_if_theme_changed
+
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# ----------------------------------------------------------------------------
+# 7. SSH AGENT
+# ----------------------------------------------------------------------------
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  RUNNING_AGENT="$(ps -ax | grep 'ssh-agent -s' | grep -v grep | wc -l | tr -d '[:space:]')"
+  if [ "$RUNNING_AGENT" = "0" ]; then
+    ssh-agent -s &> "$HOME/.ssh/ssh-agent"
+  fi
+  eval "$(cat "$HOME/.ssh/ssh-agent")" > /dev/null
+fi
+ssh-add -l &>/dev/null || ssh-add ~/.ssh/id_rsa 2>/dev/null
+
+# ----------------------------------------------------------------------------
+# 8. ALIASES - FILE SYSTEM & NAVIGATION
+# ----------------------------------------------------------------------------
+alias ls='eza -lh --group-directories-first --icons=auto'
+alias lsa='ls -a'
+alias lt='eza --tree --level=2 --long --icons --git'
+alias lta='lt -a'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias cl='clear'
+
+# fuzzy find with preview
+alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+alias fzff="fzf --preview 'bat --style=numbers --color=always {}' --bind 'enter:execute(nvim {})'"
+
+# copy pwd to clipboard
+alias cpwd='echo -n "$(pwd)" | xclip -selection clipboard'
+
+# ----------------------------------------------------------------------------
+# 9. ALIASES & FUNCTIONS - TMUX / TMUXIFIER
+# ----------------------------------------------------------------------------
+alias t='tmux'
+alias tad='tmux attach -d'
+alias ts='tmux new-session'
+alias tl='tmux list-sessions'
+alias tls='tmux ls'
+alias tksv='tmux kill-server'
+alias tkss='tmux kill-session'
+alias tmuxconf='nvim ~/.config/tmux/tmux.conf'
+
+# fzf session switcher widget (Ctrl-\ or Ctrl-_)
+fzf-tmux-session-widget() {
+  local sessions selected
+  sessions=$(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+  if [[ -z "$sessions" ]]; then
+    BUFFER='tmux new-session'
+    zle accept-line
+    return
+  fi
+  zle -I
+  selected=$(printf '%s\n' "$sessions" | fzf \
+    --height=40% --layout=reverse --border --prompt='Tmux: ' \
+    --preview='tmux capture-pane -t {} 2>/dev/null | tail -20')
+  [[ -z "$selected" ]] && { zle reset-prompt; return; }
+  if [[ -n "$TMUX" ]]; then
+    BUFFER="tmux switch-client -t ${(q)selected}"
+  else
+    BUFFER="tmux attach-session -t ${(q)selected}"
+  fi
+  zle accept-line
+}
+zle -N fzf-tmux-session-widget
+bindkey '^\' fzf-tmux-session-widget
+bindkey '^_' fzf-tmux-session-widget
+
+# attach to a session picked with fzf
+ta() {
+  local session selected
+  session=$(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+  if [[ -z "$session" ]]; then
+    echo "No tmux sessions available."
+    return 1
+  fi
+  selected=$(printf '%s\n' "$session" | fzf --prompt='Tmux: ' --height=40% --layout=reverse --border)
+  [[ -z "$selected" ]] && return
+  if [[ -n "$TMUX" ]]; then
+    tmux switch-client -t "$selected"
+  else
+    tmux attach-session -t "$selected"
+  fi
+}
+
+# new session with optional name
+tn() {
+  if [ $# -eq 0 ]; then tmux new-session; else tmux new-session -s "$1"; fi
+}
+
+# kill session with optional name
+tk() {
+  if [ $# -eq 0 ]; then tmux kill-session; else tmux kill-session -t "$1"; fi
+}
+
+# new session named after current directory
+tcd() {
+  local session_name=$(basename "$PWD")
+  tmux new-session -d -s "$session_name" -c "$PWD"
+  tmux attach-session -t "$session_name"
+}
+
+# tmuxifier
+alias tx='tmuxifier'
+txs() {
+  local session
+  session=$(tmuxifier list-sessions | fzf --prompt='Tmuxifier: ' --height=40% --layout=reverse --border)
+  [[ -n "$session" ]] && tmuxifier s "$session"
+}
+alias txn='tmuxifier new'
+alias txl='tmuxifier list'
+alias txe='tmuxifier edit'
+alias txd='tmuxifier delete'
+alias txc='tmuxifier copy'
+alias txw='tmuxifier load-window'
+
+# ----------------------------------------------------------------------------
+# 10. ALIASES - GIT & DOCKER
+# ----------------------------------------------------------------------------
+alias g='git'
+alias gcm='git commit -m'
+alias gcam='git commit -a -m'
+alias gcad='git commit -a --amend'
+alias lzg='lazygit'
+
+alias d='docker'
+alias lzd='lazydocker'
+
+# ----------------------------------------------------------------------------
+# 11. ALIASES - DEV TOOLS
+# ----------------------------------------------------------------------------
+alias n="nvim"
+alias cc="claude"
+alias c="_c_start && opencode"
+
+# pi coding agent (auto-syncs Claude tokens + Claude Code headers)
+alias pi='~/bin/pi-cc'
+# Squad: attach/create tmux session in ~/Projects/squad with Pi running
+alias squad='~/.local/bin/squad-start'
+# raw opencode binary (no tmux wrapper) - for subcommands like mcp auth, models list
+alias oc='/home/rehem/.local/share/mise/installs/node/25.2.1/bin/opencode'
+
+# VPN Globo
+alias vpn-globo='~/.local/bin/vpn-globo'
+
+# sq-alert: push Squad alert to phone (ntfy.sh, private topic)
+sq-alert() { curl -s -o /dev/null -w "%{http_code}" -d "$*" https://ntfy.sh/squad-alerts-9f3k2; }
+
+# openchamber background starter used by alias c
+_c_start() {
+  ss -tlnp 2>/dev/null | grep -q ":3000 " && return 0
+  OPENCODE_PORT="${OPENCODE_PORT:-4096}" \
+  OPENCODE_SKIP_START=true \
+  OPENCHAMBER_HOST="0.0.0.0" \
+  nohup openchamber --port 3000 --ui-password teste >/dev/null 2>&1 &
+  sleep 2
+}
+
+# yazi shell wrapper (cd on exit)
+y() {
+  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+  yazi "$@" --cwd-file="$tmp"
+  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    builtin cd -- "$cwd"
+  fi
+  rm -f -- "$tmp"
+}
+
+# improved cd: plain cd for dirs, zoxide otherwise
+alias cd="zd"
+zd() {
+  if [ $# -eq 0 ]; then
+    builtin cd ~ && return
+  elif [ -d "$1" ]; then
+    builtin cd "$1"
+  else
+    z "$@" && printf " \U000F17A9 " && pwd || echo "Error: Directory not found"
+  fi
+}
+
+# fuzzy find and open in nvim
+fv() {
+  local file
+  file=$(fzf --preview 'bat --style=numbers --color=always {}') && [ -n "$file" ] && nvim "$file"
+}
+
+# Colibri (GLM-5.2 744B local)
+alias coli='COLI_CUDA=1 COLI_GPU=0 CUDA_EXPERT_GB=6 COLI_MODEL=/mnt/nvme1/glm52_i4 DIRECT=1 /mnt/nvme1/colibri/c/coli'
+alias coli-chat='coli chat --ram 20 --topp 0.7'
+alias coli-web='coli web --ram 20 --topp 0.7'
+alias coli-serve='coli serve --host 127.0.0.1 --port 8100 --model-id colibri-glm52'
+alias coli-serve-start='~/.local/bin/coli-serve.sh start'
+alias coli-serve-stop='~/.local/bin/coli-serve.sh stop'
+alias coli-serve-status='~/.local/bin/coli-serve.sh status'
+
+# ----------------------------------------------------------------------------
+# 12. DOTFILES MANAGEMENT (chezmoi)
+# ----------------------------------------------------------------------------
+alias ca="chezmoi add"
+alias ce="chezmoi edit"
+alias cu="chezmoi update"
+alias capply="chezmoi apply"
+alias cdiff="chezmoi diff"
+
+# edit and apply in one command
+cea() { chezmoi edit --apply "$1"; }
+
+# edit with auto-apply on save
+cew() { chezmoi edit --watch "$1"; }
+
+# edit the chezmoi source file directly and apply
+ces() {
+  local file="$1"
+  local source_file=$(chezmoi source-path "$file")
+  if [[ -n "$source_file" ]]; then
+    nvim "$source_file" && chezmoi apply "$file"
+  else
+    echo "File not managed by chezmoi: $file"
+  fi
+}
+
+# sync an edited file into chezmoi (adds it first if unmanaged)
+csync() {
+  local file="$1"
+  if [[ -z "$file" ]]; then
+    echo "Usage: csync <file>"
+    return 1
+  fi
+  if ! chezmoi managed "$file" &>/dev/null; then
+    chezmoi add "$file"
+    echo "Added $file to chezmoi"
+  else
+    chezmoi re-add "$file"
+    echo "Synced $file to chezmoi"
+  fi
+}
+
+# watch common dotfiles and auto-sync on change
+cwatch() {
+  echo "Watching dotfiles for changes... Press Ctrl+C to stop"
+  local files=(
+    "$HOME/.zshrc"
+    "$HOME/.config/tmux/tmux.conf"
+    "$HOME/.gitconfig"
+  )
+  if command -v inotifywait &> /dev/null; then
+    for file in "${files[@]}"; do
+      [[ -f "$file" ]] && inotifywait -m -e modify "$file" --format '%w' |
+        while read changed_file; do
+          echo "Detected change in $changed_file"
+          csync "$changed_file"
+        done &
+    done
+    wait
+  else
+    echo "Install inotify-tools for file watching: sudo pacman -S inotify-tools"
+  fi
+}
+
+# ----------------------------------------------------------------------------
+# 13. PACKAGE MANAGEMENT (Arch)
+# ----------------------------------------------------------------------------
+alias yayf="yay -Slq | fzf --multi --preview 'yay -Sii {1}' --preview-window=down:75% | xargs -ro yay -S"
+pacf() { local pkgs; pkgs=("${(@f)$(pacman -Slq | fzf -m --prompt='pacman> ')}"); (( ${#pkgs} )) && sudo pacman -S -- "${pkgs[@]}"; }
+
+# ----------------------------------------------------------------------------
+# 14. HELP - list aliases
+# ----------------------------------------------------------------------------
+aliases() {
+  echo "Aliases com descricoes:"
+  echo "=========================="
+  echo "FILE SYSTEM:"
+  echo "  ls     - eza com detalhes e icons"
+  echo "  lsa    - lista todos os arquivos (hidden)"
+  echo "  lt     - tree view com git status"
+  echo "  lta    - tree view com hidden files"
+  echo "  ff/fzff- fuzzy find com preview (bat)"
+  echo "  fv     - fuzzy find e abre no nvim"
+  echo "  ..     - sobe um diretorio"
+  echo "  ...    - sobe dois diretorios"
+  echo "  ....   - sobe tres diretorios"
+  echo "  cd     - cd melhorado com zoxide"
+  echo "  cpwd   - copia pwd para o clipboard"
+  echo ""
+  echo "DEVELOPMENT:"
+  echo "  n      - neovim"
+  echo "  d      - docker"
+  echo "  lzd    - lazydocker TUI"
+  echo "  y      - yazi file manager"
+  echo "  c      - opencode (via tmux)"
+  echo "  oc     - opencode binario direto"
+  echo "  cc     - claude"
+  echo "  pi     - pi coding agent"
+  echo "  squad  - squad start"
+  echo ""
+  echo "GIT:"
+  echo "  g      - git"
+  echo "  lzg    - lazygit TUI"
+  echo "  gcm    - git commit -m"
+  echo "  gcam   - git commit -a -m"
+  echo "  gcad   - git commit -a --amend"
+  echo ""
+  echo "TMUX:"
+  echo "  t      - tmux"
+  echo "  ta     - attach to session (fzf)"
+  echo "  ts     - nova session"
+  echo "  tl/tls - listar sessions"
+  echo "  tn     - nova session com nome"
+  echo "  tk     - kill session"
+  echo "  tcd    - session com nome do dir atual"
+  echo "  tksv   - kill server"
+  echo "  tx     - tmuxifier"
+  echo "  txs    - tmuxifier start session (fzf)"
+  echo ""
+  echo "DOTFILES (chezmoi):"
+  echo "  ca     - chezmoi add"
+  echo "  ce     - chezmoi edit"
+  echo "  cea    - edita e aplica"
+  echo "  cew    - edita com watch (auto-apply)"
+  echo "  ces    - edita source e aplica"
+  echo "  csync  - sincroniza arquivo para o chezmoi"
+  echo "  cwatch - watch dotfiles e auto-sync"
+  echo "  cu     - chezmoi update"
+  echo "  capply - chezmoi apply"
+  echo "  cdiff  - chezmoi diff"
+  echo ""
+}
+
+# ----------------------------------------------------------------------------
+# 15. LOCAL CUSTOMIZATIONS (secrets, machine-specific) - never tracked
+# ----------------------------------------------------------------------------
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
