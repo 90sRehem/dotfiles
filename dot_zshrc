@@ -95,6 +95,12 @@ zinit light MichaelAquilina/zsh-you-should-use           # reminds you of existi
 zinit light djui/alias-tips                              # suggests aliases as you type
 zinit light hlissner/zsh-autopair                        # auto-close brackets/quotes
 
+# Keep Ctrl-R on fzf history search after history plugins load.
+if (( $+commands[fzf] )) && [[ -r /usr/share/fzf/key-bindings.zsh ]]; then
+  source /usr/share/fzf/key-bindings.zsh
+  bindkey -M viins '^R' fzf-history-widget
+fi
+
 # fzf-tab previews
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'eza -1 --color=always $realpath'
@@ -474,3 +480,12 @@ aliases() {
 # 15. LOCAL CUSTOMIZATIONS (secrets, machine-specific) - never tracked
 # ----------------------------------------------------------------------------
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# >>> Codex installer >>>
+export PATH="/home/rehem/.local/bin:$PATH"
+# <<< Codex installer <<<
+
+# >>> opencode-agent-tmux >>>
+export OPENCODE_PORT=4096
+alias opencode='opencode-tmux'
+# <<< opencode-agent-tmux <<<
